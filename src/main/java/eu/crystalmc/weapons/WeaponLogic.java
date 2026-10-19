@@ -64,7 +64,7 @@ class WeaponLogic implements Listener {
 
         removeFireModel(item, weapon);
 
-        displayBullets(player, weapon, WeaponUtils.getAmmunitionType(player, weapon));
+        displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
     }
 
     // Prevent player from dropping a fired weapon
@@ -121,7 +121,8 @@ class WeaponLogic implements Listener {
 
                 if (weapon.getAmmunition() == 0) {
                     if (config.isMagazineSystemEnabled()) {
-                        if (!WeaponUtils.hasAmmunitionType(player, weapon) && config.isMagazineSystemEnabled()) {
+                        String ammunitionType = WeaponUtils.getAmmunitionType(player, weapon);
+                        if (!WeaponUtils.hasAmmunitionType(player, ammunitionType)) {
                             player.clearActiveItem();
                             showHotbar(player, "No ammunition");
                         } else {
@@ -142,7 +143,7 @@ class WeaponLogic implements Listener {
                     if (!weapon.isInfiniteAmmunition()) {
                         weapon.setAmmunition(weapon.getAmmunition() - 1);
                     }
-                    displayBullets(player, weapon, WeaponUtils.getAmmunitionType(player, weapon));
+                    displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
                     shoot(player, weapon, item);
 
                     if (!weapon.isAutomatic()) {
@@ -210,18 +211,22 @@ class WeaponLogic implements Listener {
                     player.setActiveItemRemainingTime(0);
                     player.clearActiveItem();
 
-                    if (!WeaponUtils.hasAmmunitionType(player, weapon) && config.isMagazineSystemEnabled()) {
-                        showHotbar(player, "Reload cancelled");
-                    } else {
-                        showHotbar(player, "Reloaded");
-                        weapon.setAmmunition(weapon.getMagazineSize());
-                        if (config.isMagazineSystemEnabled()) {
-                            WeaponUtils.removeAmmunitionType(player, weapon);
-                        }
-                        updateAmmunition(item, weapon);
 
-                        WeaponUtils.updateLore(item, weapon);
+                    if (config.isMagazineSystemEnabled()) {
+                        String ammunitionType = WeaponUtils.getAmmunitionType(player, weapon);
+                        if (WeaponUtils.hasAmmunitionType(player, ammunitionType)) {
+                            WeaponUtils.removeAmmunitionType(player, ammunitionType);
+                        } else {
+                            showHotbar(player, "Reload cancelled");
+                            this.cancel();
+                            return;
+                        }
                     }
+                    showHotbar(player, "Reloaded");
+                    weapon.setAmmunition(weapon.getMagazineSize());
+                    updateAmmunition(item, weapon);
+
+                    WeaponUtils.updateLore(item, weapon);
                     this.cancel();
                     return;
                 }

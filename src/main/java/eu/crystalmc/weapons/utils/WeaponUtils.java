@@ -7,6 +7,7 @@ import de.tr7zw.nbtapi.iface.ReadableNBT;
 import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.Weapon;
+import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
@@ -86,39 +87,60 @@ public class WeaponUtils {
     }
 
 
-
-
-    private static ItemStack getAmmunitionItem(Weapon weapon) {
-        return AmmunitionTypesRegistry.getAmmunitionType(weapon.getAmmunitionType());
-    }
-
-    static public int getAmmunitionType(Player player, Weapon weapon) {
-        ItemStack itemStack = getAmmunitionItem(weapon);
-        if (itemStack == null) return 0;
-
+    static public int getAmmunitionAmount(Player player, Weapon weapon) {
         int count = 0;
 
-        for (ItemStack item : player.getInventory().all(itemStack.getType()).values()) {
-            if (itemStack.isSimilar(item)) {
-                count += item.getAmount();
+        for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
+            if (player.getInventory().containsAtLeast(ammunition, 1)) {
+                ReadableNBT compound = NBT.get(ammunition, nbt ->
+                        (ReadableNBT) nbt.getCompound(CrystalWeapons.WEAPON_COMPOUND));
+                if (compound != null) {
+                    if (compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())) {
+                        count++;
+                    }
+                }
             }
+
         }
 
         return count;
     }
-    static public void removeAmmunitionType(Player player, Weapon weapon) {
-        Inventory inventory = player.getInventory();
 
-        ItemStack item = getAmmunitionItem(weapon);
-        if (item == null) return;
 
-        if (inventory.containsAtLeast(item, 1)) {
-            inventory.removeItemAnySlot(item);
+    static public String getAmmunitionType(Player player, Weapon weapon) {
+        for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
+            if (player.getInventory().containsAtLeast(ammunition, 1)) {
+                ReadableNBT compound = NBT.get(ammunition, nbt -> (ReadableNBT) nbt.getCompound(CrystalWeapons.WEAPON_COMPOUND));
+                if (compound != null) {
+                    if (compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())) {
+                        return compound.getString(AmmunitionTypeConfig.Key.ID.key);
+                    }
+                }
+            }
+
         }
+        return null;
     }
-    static public boolean hasAmmunitionType(Player player, Weapon weapon) {
-        ItemStack item = AmmunitionTypesRegistry.getAmmunitionType(weapon.getAmmunitionType());
-        return player.getInventory().containsAtLeast(item, 1);
+
+
+    static public boolean removeAmmunitionType(Player player, String ammunitionType) {
+        ItemStack item =  AmmunitionTypesRegistry.getAmmunitionType(ammunitionType);
+        if (item != null && ammunitionType != null) {
+            player.getInventory().removeItemAnySlot(item);
+            return true;
+        } else {
+            return false;
+        }
+
+
+    }
+    static public boolean hasAmmunitionType(Player player, String ammunitionType) {
+        ItemStack item =  AmmunitionTypesRegistry.getAmmunitionType(ammunitionType);
+        if (item != null && ammunitionType != null) {
+            return player.getInventory().containsAtLeast(item, 1);
+        } else {
+            return false;
+        }
     }
 
 

@@ -16,9 +16,6 @@ public class WeaponConfig {
     @SerializedName("magazine_size")
     private int magazineSize = 12;
 
-    @SerializedName("ammunition_type")
-    private String ammunitionType = "rifle";
-
     @SerializedName("reload_time")
     private int reloadTime = 45;
 
@@ -52,10 +49,6 @@ public class WeaponConfig {
 
     public int getMagazineSize() {
         return magazineSize;
-    }
-
-    public String getAmmunitionType() {
-        return ammunitionType;
     }
 
     public String getDisplayName() {

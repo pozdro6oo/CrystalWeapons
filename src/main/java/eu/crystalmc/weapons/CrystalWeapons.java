@@ -4,6 +4,7 @@ import eu.crystalmc.weapons.command.AmmunitionCommand;
 import eu.crystalmc.weapons.command.RemoveBulletHitDecalsCommand;
 import eu.crystalmc.weapons.command.WeaponCommand;
 import eu.crystalmc.weapons.config.Config;
+import eu.crystalmc.weapons.listener.DisableItemCrafting;
 import eu.crystalmc.weapons.listener.SynchronizeWeaponWithConfiguration;
 import eu.crystalmc.weapons.resourcepack.ResourcepackBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -44,6 +45,8 @@ public final class CrystalWeapons extends JavaPlugin {
         //  register event listener
         //  this one does not need any priority
         Bukkit.getPluginManager().registerEvents(new WeaponLogic(this), this);
+        Bukkit.getPluginManager().registerEvents(new DisableItemCrafting(), this);
+
         if (getConfiguration().isSynchronizeWeaponWithConfiguration()) {
             Bukkit.getPluginManager().registerEvents(new SynchronizeWeaponWithConfiguration(this), this);
         }

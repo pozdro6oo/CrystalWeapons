@@ -176,6 +176,7 @@ public class ResourcepackBuilder {
     }
     private void createAmmunitionTypes() {
         createFiles("ammunition_types", "ammunition_type", this::generateAmmunitionType, AmmunitionTypeConfig.class);
+
     }
 
 
@@ -202,7 +203,7 @@ public class ResourcepackBuilder {
         createModel(name, "ammunition_type", ammunitionType.getModel());
         createAmmunitionTypeItem(name);
 
-        AmmunitionTypesRegistry.registerAmmunitionType(name, item);
+        AmmunitionTypesRegistry.registerAmmunitionType(name, item, ammunitionType);
     }
 
     private void generateWeapon(String name, WeaponConfig config, File texture) {
@@ -278,8 +279,10 @@ public class ResourcepackBuilder {
         ItemStack item = new ItemStack(material);
 
         NBT.modify(item, nbt -> {
-            nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND)
-                    .setString(AmmunitionTypeConfig.Key.ID.key, name);
+            ReadWriteNBT compound = nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND);
+            compound.setString(AmmunitionTypeConfig.Key.ID.key, name);
+            compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key)
+                    .addAll(ammunitionTypeConfig.getSupportedWeapons());
         });
 
         ItemMeta meta = item.getItemMeta();
