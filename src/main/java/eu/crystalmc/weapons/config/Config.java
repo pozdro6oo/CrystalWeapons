@@ -1,21 +1,28 @@
 package eu.crystalmc.weapons.config;
 
 import de.exlll.configlib.*;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
+import org.bukkit.Material;
 
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class Config {
 
     public Data data;
+    public Path file;
+
 
     YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder().setNameFormatter(NameFormatters.LOWER_UNDERSCORE).build();
 
     public Config(Path file) {
-
         this.data = YamlConfigurations.update(file, Data.class, properties);
+        this.data.config = this;
+
+        this.file = file;
     }
 
     public void reload(Path file) {
@@ -25,12 +32,17 @@ public class Config {
     public void save(Path file) {
         this.data = YamlConfigurations.update(file, Data.class, properties);
     }
+    public void save() {
+        this.data = YamlConfigurations.update(file, Data.class, properties);
+    }
 
 
 
 
     @Configuration
     public static class Data {
+
+        private transient Config config;
 
         public Permissions permissions = new Permissions();
 
@@ -74,6 +86,8 @@ public class Config {
 
                 public String item = "RABBIT_HIDE";
 
+                public Animation animation = new Animation();
+
                 public BulletHitDecal bulletHitDecal = new BulletHitDecal();
 
                 @Configuration
@@ -95,6 +109,15 @@ public class Config {
                     public int cleanUnusedDecalsInterval = 240;
 
                 }
+                @Configuration
+                public static class Animation {
+                    public String shoot = "TOOT_HORN";
+                    @Comment({
+                            "For now does nothing. Maybe in future"
+                    })
+                    public String reload = "EAT";
+
+                }
 
                 @Comment( {
                         "When shot_delay of weapon is less than or equal to this value, the plugin will not change the model of the weapon.",
@@ -113,7 +136,14 @@ public class Config {
 
             @Configuration
             public static class ConfigurationData {
+                @Comment({
+                        "When enabled: synchronizes player's weapon with it's latest configuration."
+                })
                 public boolean synchronizeWeaponWithConfiguration = true;
+                @Comment({
+                        "When enabled: removes weapon from player's inventory if it's configuration does not exist."
+                })
+                public boolean removeWeaponIfNotExist = false;
             }
 
 
@@ -121,6 +151,17 @@ public class Config {
 
             @Configuration
             public static class Gameplay {
+                @Comment({
+                        "This is an experimental feature.",
+                        "Default: '0.00'."
+                })
+
+                public Double movementInaccuracy = 0.00;
+
+                public Double bulletHitboxSize = 0.10;
+
+                public MagazineSystem magazineSystem = new MagazineSystem();
+
                 public LimitDistanceForAllWeapons limitDistanceForAllWeapons = new LimitDistanceForAllWeapons();
 
                 @Configuration
@@ -130,16 +171,14 @@ public class Config {
                             "Please note that there is not hard-coded limit, so if you set this to some high number, the server might lag or crash."
                     })
                     public Boolean enabled = false;
-                    public int distance = 128;
+                    public double distance = 128;
                 }
 
-                @Comment({
-                        "This is an experimental feature.",
-                })
-
-                public Double movementInaccuracy = 0.00;
-
-                public Double bulletHitboxSize = 0.10;
+                @Configuration
+                public static class MagazineSystem {
+                    public Boolean enabled = true;
+                    public int maxStackSize = 18;
+                }
 
             }
         }
@@ -187,5 +226,60 @@ public class Config {
             public Set<String> copyResourcepackOutputTo = Collections.emptySet();
         }
 
+
+        public int getMaxMagazineItemStackSize() {
+            return weapons.gameplay.magazineSystem.maxStackSize;
+        }
+
+        public boolean isSynchronizeWeaponWithConfiguration() {
+            return weapons.data.synchronizeWeaponWithConfiguration;
+        }
+
+        public boolean isMagazineSystemEnabled() {
+            return weapons.gameplay.magazineSystem.enabled;
+        }
+
+        public Material getItemMaterial() {
+            return getEnum(Material.class, weapons.visual.item,
+                    Material.RABBIT_HIDE, value -> weapons.visual.item = value);
+        }
+
+        public ItemUseAnimation getReloadAnimation() {
+            return getEnum(ItemUseAnimation.class, weapons.visual.animation.reload,
+                    ItemUseAnimation.EAT, value -> weapons.visual.animation.reload = value);
+        }
+
+        public ItemUseAnimation getShootAnimation() {
+            return getEnum(ItemUseAnimation.class, weapons.visual.animation.shoot,
+                    ItemUseAnimation.TOOT_HORN, value -> weapons.visual.animation.shoot = value);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private <E extends Enum<E>> E getEnum(Class<E> enumClass, String value, E defaultValue, Consumer<String> setter) {
+            String formatted = getFormattedEnum(value);
+
+            if (!org.apache.commons.lang3.EnumUtils.isValidEnum(enumClass, formatted)) {
+                setter.accept(defaultValue.toString());
+                config.save();
+                return defaultValue;
+            }
+
+            return Enum.valueOf(enumClass, formatted);
+        }
+
+        private static String getFormattedEnum(String material) {
+            return material.replaceAll(" ", "_").replaceAll("-", "_").toUpperCase();
+        }
     }
 }

@@ -5,6 +5,16 @@ import eu.crystalmc.weapons.config.WeaponConfig;
 
 public class Weapon extends WeaponConfig {
 
+    public enum Key {
+        AMMUNITION,
+        ID,
+        SYNCHRONIZE_WEAPON_DATA,
+        RUNTIME;
+
+        public final String key = this.toString().toLowerCase();
+
+    }
+
     @SerializedName("ammunition")
     private int ammunition;
 
@@ -21,10 +31,10 @@ public class Weapon extends WeaponConfig {
     public int getAmmunition() {
         return ammunition;
     }
-
     public void setAmmunition(int ammunition) {
         this.ammunition = ammunition;
     }
+
 
     public String getId() {
         return id;

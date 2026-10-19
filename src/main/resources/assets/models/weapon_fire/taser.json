@@ -1,5 +1,4 @@
 {
-	"parent": "buildin/generated",
 	"textures": {
 		"fire": "crystalmc:item/weapon_fire/taser"
 	},

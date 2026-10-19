@@ -5,27 +5,24 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
+import eu.crystalmc.weapons.Weapon;
 import eu.crystalmc.weapons.WeaponsRegistry;
+import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.config.JsonConfig;
 import eu.crystalmc.weapons.config.WeaponConfig;
 import eu.crystalmc.weapons.config.resourcepack.FireAnimationTexture;
 import eu.crystalmc.weapons.config.resourcepack.Item;
 import eu.crystalmc.weapons.config.resourcepack.Model;
-import eu.crystalmc.weapons.utils.FTPUtils;
-import eu.crystalmc.weapons.utils.HTTPServer;
-import eu.crystalmc.weapons.utils.NBTUtils;
-import eu.crystalmc.weapons.utils.ZIPUtils;
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.Consumable;
+import eu.crystalmc.weapons.utils.*;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.apache.commons.lang3.EnumUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -50,10 +47,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public class ResourcepackBuilder {
-    CrystalWeapons plugin;
+    private final CrystalWeapons plugin;
+    private final Config.Data config;
 
     public ResourcepackBuilder(CrystalWeapons plugin) {
         this.plugin = plugin;
+        this.config = plugin.getConfiguration();
     }
 
 
@@ -70,11 +69,13 @@ public class ResourcepackBuilder {
 
             Path assets = outputFolder.toPath().resolve("assets");
 
+            Files.createDirectories(assets);
 
             Files.createDirectories(assets);
             Files.createDirectories(crystalFolder.resolve("items"));
             Files.createDirectories(crystalFolder.resolve("sounds"));
             Files.createDirectories(crystalFolder.resolve("textures").resolve("item").resolve("weapon"));
+            Files.createDirectories(crystalFolder.resolve("textures").resolve("item").resolve("ammunition_type"));
             Files.createDirectories(crystalFolder.resolve("models"));
             Files.createDirectories(crystalFolder.resolve("textures"));
 
@@ -88,6 +89,7 @@ public class ResourcepackBuilder {
         plugin.saveResource("resourcepack_output/pack.mcmeta", true);
 
         createWeapons();
+        createAmmunitionTypes();
 
         createSounds();
 
@@ -113,94 +115,131 @@ public class ResourcepackBuilder {
     }
 
 
-    private void createWeapons() {
-        File weaponsFolder = plugin.getDataPath().resolve("weapons").toFile();
-        int weaponCount = 0;
+    @FunctionalInterface
+    interface FileConfig<T> {
+        void apply(String name, T jsonConfig, File file);
+    }
+
+    private <T> void createFiles(String folder, String outputFolder, FileConfig<T> logic, Class<T> configClass) {
+        File directory = plugin.getDataPath().resolve(folder).toFile();
+
+        try {
+            FileUtils.forceMkdir(directory);
+        } catch (IOException e) {
+            plugin.sendError("Cannot create directory '" + folder + "'");
+        }
+
+        int count = 0;
 
 
 
-        File[] files = weaponsFolder.listFiles((_, name) -> name.endsWith(".json"));
+        File[] files = directory.listFiles((_, name) -> name.endsWith(".json"));
 
         if (files == null) {
-            plugin.sendWarning("No weapons found");
+            plugin.sendWarning("No " + folder + " found");
             return;
         }
 
         File texture;
         String name;
-        JsonConfig<WeaponConfig> weaponConfig;
+        JsonConfig<T> config;
 
         for (File file : files) {
             name = file.getName().toLowerCase();
             if (name.endsWith(".json")) {
-                texture = weaponsFolder.toPath().resolve(name.replace(".json", ".png")).toFile();
+                texture = directory.toPath().resolve(name.replace(".json", ".png")).toFile();
                 if (texture.exists()) {
-                    weaponConfig = new JsonConfig<>(file, WeaponConfig.class);
+                    config = new JsonConfig<>(file, configClass);
                     name = name.replaceFirst("[.][^.]+$", "");
-                    boolean generated = createWeaponFiles(name, weaponConfig, texture);
+                    config.load();
+                    boolean generated = copyTexture(texture, outputFolder);
+                    config.save();
                     if (generated) {
-                        weaponCount++;
+                        logic.apply(name, config.config, file);
+                        count++;
                     } else {
-                        plugin.sendWarning("Failed to register weapon '" + name + "'");
+                        plugin.sendWarning("Failed to register " + outputFolder + " '" + name + "'");
                     }
                 }
             }
         }
-        plugin.sendInfo("Registered weapons: " + weaponCount);
-
+        String info = "Registered " + folder + ": " + count;
+        if (count > 0) {
+            plugin.sendInfo(info);
+        } else {
+            plugin.sendWarning(info);
+        }
     }
 
-    private boolean createWeaponFiles(String name, JsonConfig<WeaponConfig> weaponConfig, File texture) {
-        weaponConfig.load();
-        WeaponConfig weapon = weaponConfig.config;
+    private void createWeapons() {
+        createFiles("weapons", "weapon", this::generateWeapon, WeaponConfig.class);
+    }
+    private void createAmmunitionTypes() {
+        createFiles("ammunition_types", "ammunition_type", this::generateAmmunitionType, AmmunitionTypeConfig.class);
+    }
 
+
+    private boolean copyTexture(File texture, String folder) {
         try {
-            Files.copy(texture.toPath(), getCrystalmcFolder().resolve("textures").resolve("item").resolve("weapon").resolve(texture.getName()), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(texture.toPath(), getCrystalmcFolder().resolve("textures").resolve("item").resolve(folder).resolve(texture.getName()), StandardCopyOption.REPLACE_EXISTING);
+            return true;
         } catch (IOException e) {
-            plugin.sendError("Failed to create a weapon texture");
+            plugin.sendError("Failed to copy " + folder + " texture");
             return false;
         }
+    }
 
-        ItemStack item = createWeaponItemStack(name, weapon);
 
-        if (item == null) {
-            return false;
-        }
 
-        weaponConfig.save();
 
-        createWeaponModel(name, weapon);
-        createWeaponItem(name, weapon);
+
+
+
+
+    private void generateAmmunitionType(String name, AmmunitionTypeConfig ammunitionType, File texture) {
+        ItemStack item = createAmmunitionTypeItemStack(name, ammunitionType);
+
+        createModel(name, "ammunition_type", ammunitionType.getModel());
+        createAmmunitionTypeItem(name);
+
+        AmmunitionTypesRegistry.registerAmmunitionType(name, item);
+    }
+
+    private void generateWeapon(String name, WeaponConfig config, File texture) {
+        ItemStack item = createWeaponItemStack(name, config);
+
+        createModel(name, "weapon", config.getModel());
+        createWeaponItem(name, config);
 
         WeaponsRegistry.registerWeapon(name, item);
-
-        return true;
     }
+
+
+
+
+
+
+
+
 
 
     private ItemStack createWeaponItemStack(String name, WeaponConfig weapon) {
+        Material material = config.getItemMaterial();
 
-        // check if item is a real material
-        String material = plugin.getConfiguration().weapons.visual.item;
-        boolean isMaterial = EnumUtils.isValidEnum(Material.class, getFormattedMaterial(material));
-        if (!isMaterial) {
-            plugin.sendError("Weapon '" + name + "' has invalid material");
-            return null;
-        }
-
+        ItemUseAnimation animation = config.getShootAnimation();
 
         // create item
-        ItemStack item = new ItemStack(Material.valueOf(material));
+        ItemStack item = new ItemStack(material);
 
 
         ReadWriteNBT compound = NBTUtils.nbtFromObject(weapon);
-        compound.setInteger("ammunition", weapon.getMaxAmmunition());
-        compound.setBoolean("synchronize_weapon_data", true);
-        compound.setString("runtime", CrystalWeapons.RUNTIME);
-        compound.setString("id", name);
+        compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getMaxAmmunition());
+        compound.setBoolean(Weapon.Key.SYNCHRONIZE_WEAPON_DATA.key, true);
+        compound.setString(Weapon.Key.RUNTIME.key, CrystalWeapons.RUNTIME);
+        compound.setString(Weapon.Key.ID.key, name);
 
         NBT.modify(item, nbt -> {
-                nbt.getOrCreateCompound(CrystalWeapons.COMPOUND).mergeCompound(compound);
+                nbt.getOrCreateCompound(CrystalWeapons.WEAPON_COMPOUND).mergeCompound(compound);
             });
 
         ItemMeta meta = item.getItemMeta();
@@ -225,17 +264,52 @@ public class ResourcepackBuilder {
             )
         );
 
-        Consumable.Builder builder = Consumable.consumable()
-            .hasConsumeParticles(false)
-            .animation(ItemUseAnimation.TOOT_HORN)
-            .consumeSeconds(20);
-
         meta.setMaxStackSize(1);
         item.setItemMeta(meta);
-        item.setData(DataComponentTypes.CONSUMABLE, builder.build());
+        WeaponUtils.setAnimation(item, animation);
 
         return item;
     }
+
+    private ItemStack createAmmunitionTypeItemStack(String name, AmmunitionTypeConfig ammunitionTypeConfig) {
+        Material material = config.getItemMaterial();
+
+        // Create item
+        ItemStack item = new ItemStack(material);
+
+        NBT.modify(item, nbt -> {
+            nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND)
+                    .setString(AmmunitionTypeConfig.Key.ID.key, name);
+        });
+
+        ItemMeta meta = item.getItemMeta();
+
+
+        Component itemName = Component.text(ammunitionTypeConfig.getDisplayName()).decoration(TextDecoration.ITALIC, false).color(NamedTextColor.WHITE);
+        meta.itemName(itemName);
+        meta.customName(itemName);
+        meta.setItemModel(new NamespacedKey("crystalmc", "ammunition_type/" + name));
+
+        meta.setMaxStackSize(config.getMaxMagazineItemStackSize());
+        item.setItemMeta(meta);
+
+        return item;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private Component getLoreLine(String string, NamedTextColor color) {
         return Component.text(string).decoration(TextDecoration.ITALIC, false).color(color);
@@ -244,17 +318,51 @@ public class ResourcepackBuilder {
         return getLoreLine(string, NamedTextColor.BLUE);
     }
 
-    private void createWeaponModel(String name, WeaponConfig weaponConfig) {
-        File modelFile = getCrystalmcFolder().resolve("models").resolve("weapon").resolve(name + ".json").toFile();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void createModel(String name, String folder, String modelName) {
+        File modelFile = getCrystalmcFolder().resolve("models").resolve(folder).resolve(name + ".json").toFile();
 
         JsonConfig<Model> model = new JsonConfig<>(modelFile, Model.class);
 
         model.load();
-        model.config.textures.layer0 = "crystalmc:item/weapon/" + name;
-        model.config.parent = "crystalmc:weapon/" + weaponConfig.getModel();
+        model.config.textures.layer0 = "crystalmc:item/"+folder+"/" + name;
+        model.config.parent = "crystalmc:"+folder+"/" + modelName;
 
         model.save();
     }
+
+
+    private void createItem(String name, String folder) {
+        File modelFile = getCrystalmcFolder().resolve("items").resolve(folder).resolve(name + ".json").toFile();
+
+        JsonConfig<Item> model = new JsonConfig<>(modelFile, Item.class);
+
+        model.load();
+        model.config.model.type = "minecraft:model";
+        model.config.model.model = "";
+        model.config.model.model = "crystalmc:" +folder+ "/" + name;
+        model.save();
+
+    }
+
+
+
 
     private void createWeaponItem(String name, WeaponConfig weaponConfig) {
         File modelFireFile = getCrystalmcFolder().resolve("items").resolve("weapon").resolve(name + "_fire.json").toFile();
@@ -271,18 +379,27 @@ public class ResourcepackBuilder {
         modelFire.save();
 
 
-        File modelFile = getCrystalmcFolder().resolve("items").resolve("weapon").resolve(name + ".json").toFile();
-
-        JsonConfig<Item> model = new JsonConfig<>(modelFile, Item.class);
-
-        model.load();
-        model.config.model.type = "minecraft:model";
-        model.config.model.model = "";
-        model.config.model.model = "crystalmc:weapon/" + name;
-        model.save();
-
-
+        createItem(name, "weapon");
     }
+
+    private void createAmmunitionTypeItem(String name) {
+        createItem(name, "ammunition_type");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void createBulletHitItem() {
         File modelFile = getCrystalmcFolder().resolve("items").resolve("bullet_hit.json").toFile();
@@ -505,9 +622,6 @@ public class ResourcepackBuilder {
         }
     }
 
-    private String getFormattedMaterial(String material) {
-        return material.replaceAll(" ", "_").toUpperCase();
-    }
 
 
 

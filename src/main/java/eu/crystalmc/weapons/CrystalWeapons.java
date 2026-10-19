@@ -1,8 +1,10 @@
 package eu.crystalmc.weapons;
 
+import eu.crystalmc.weapons.command.AmmunitionCommand;
 import eu.crystalmc.weapons.command.RemoveBulletHitDecalsCommand;
 import eu.crystalmc.weapons.command.WeaponCommand;
 import eu.crystalmc.weapons.config.Config;
+import eu.crystalmc.weapons.listener.SynchronizeWeaponWithConfiguration;
 import eu.crystalmc.weapons.resourcepack.ResourcepackBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
@@ -19,7 +21,8 @@ import java.util.UUID;
 
 public final class CrystalWeapons extends JavaPlugin {
 
-    public final static String COMPOUND = "crystalmc:weapon";
+    public final static String WEAPON_COMPOUND = "crystalmc:weapon";
+    public final static String AMMUNITION_COMPOUND = "crystalmc:ammunition";
 
     public final static String RUNTIME = UUID.randomUUID().toString();
 
@@ -41,7 +44,7 @@ public final class CrystalWeapons extends JavaPlugin {
         //  register event listener
         //  this one does not need any priority
         Bukkit.getPluginManager().registerEvents(new WeaponLogic(this), this);
-        if (getConfiguration().weapons.data.synchronizeWeaponWithConfiguration) {
+        if (getConfiguration().isSynchronizeWeaponWithConfiguration()) {
             Bukkit.getPluginManager().registerEvents(new SynchronizeWeaponWithConfiguration(this), this);
         }
 
@@ -51,11 +54,14 @@ public final class CrystalWeapons extends JavaPlugin {
                     new WeaponCommand().getCommand(this)
             );
             event.registrar().register(
+                    new AmmunitionCommand().getCommand(this)
+            );
+            event.registrar().register(
                     new RemoveBulletHitDecalsCommand().getCommand(config.data.permissions.removeBulletDecals)
             );
         });
 
-        BulletHitDecals.startGarbageCollector(this, config.data.weapons.visual.bulletHitDecal.cleanUnusedDecalsInterval);
+        BulletHitDecalsManager.startGarbageCollector(this, config.data.weapons.visual.bulletHitDecal.cleanUnusedDecalsInterval);
 
 
         //  build and pack resourcepack
@@ -79,7 +85,7 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
     public static void removeAllBulletHitDecals() {
-        BulletHitDecals.removeAll();
+        BulletHitDecalsManager.removeAll();
     }
 
     public static ItemStack getWeapon(String weaponId) {
@@ -156,6 +162,7 @@ public final class CrystalWeapons extends JavaPlugin {
     private void setupDefaultConfiguration() {
         if (this.isSetup()) {
             this.saveResource("assets/models/weapon/default.json", false);
+            this.saveResource("assets/models/ammunition_type/default.json", false);
 
             setupDefaultFireAnimations("default");
             setupDefaultFireAnimations("taser");
@@ -165,6 +172,12 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("taser", false);
             setupDefaultWeapon("mag7");
             setupDefaultWeapon("glock18");
+            setupDefaultWeapon("m4a4");
+            setupDefaultWeapon("m4a1-s");
+            setupDefaultWeapon("sg553");
+
+            setupDefaultAmmunitionType("rifle");
+
 
 
             this.saveResource("tutorial.txt", false);
@@ -181,6 +194,7 @@ public final class CrystalWeapons extends JavaPlugin {
     private void setupDefaultWeapon(String weapon) {
         setupDefaultWeapon(weapon, true);
     }
+
     private void setupDefaultWeapon(String weapon, boolean reloadSound) {
         this.saveResource("weapons/" + weapon + ".png", false);
         this.saveResource("weapons/" + weapon + ".json", false);
@@ -189,6 +203,11 @@ public final class CrystalWeapons extends JavaPlugin {
             this.saveResource("assets/sounds/" + weapon + ".reload.ogg", false);
         }
         this.saveResource("assets/sounds/" + weapon + ".shoot.ogg", false);
+    }
+
+    private void setupDefaultAmmunitionType(String weapon) {
+        this.saveResource("ammunition_types/" + weapon + ".png", false);
+        this.saveResource("ammunition_types/" + weapon + ".json", false);
     }
 
     private void setupDefaultFireAnimations(String fireAnimation) {

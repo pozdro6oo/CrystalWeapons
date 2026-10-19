@@ -3,16 +3,19 @@ package eu.crystalmc.weapons.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.WeaponsRegistry;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.config.JsonConfig;
 import eu.crystalmc.weapons.config.WeaponConfig;
+import eu.crystalmc.weapons.utils.CommandUtils;
 import eu.crystalmc.weapons.utils.NBTUtils;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -46,16 +49,7 @@ public class WeaponCommand {
                         .then(Commands.argument("weapon", StringArgumentType.word())
                                 .suggests( (_, builder) -> suggestWeapons(builder))
                                 .executes(context -> {
-                                    CommandSender sender = context.getSource().getSender();
-                                    String weapon = context.getArgument("weapon", String.class);
-                                    List<Entity> entities = context.getArgument("entities", EntitySelectorArgumentResolver.class).resolve(context.getSource());
-
-                                    if (!WeaponsRegistry.getItems().containsKey(weapon)) {
-                                        sender.sendMessage(Component.text("Unknown weapon '" + weapon + "'").color(NamedTextColor.RED));
-                                        return Command.SINGLE_SUCCESS;
-                                    }
-                                    giveWeapon(sender, weapon, entities);
-
+                                    giveWeapon(context);
                                     return Command.SINGLE_SUCCESS;
                                 })
                     ))
@@ -82,7 +76,7 @@ public class WeaponCommand {
                                         ReadWriteNBT compound = WeaponUtils.getNBT(nbt);
                                         if (compound != null) {
                                             WeaponConfig weaponConfig = NBTUtils.nbtToObject(compound, WeaponConfig.class);
-                                            JsonConfig<WeaponConfig>  json = new JsonConfig(file, WeaponConfig.class, weaponConfig);
+                                            JsonConfig<WeaponConfig>  json = new JsonConfig<>(file, WeaponConfig.class, weaponConfig);
                                             sender.sendMessage("Saved weapon '" + weapon + "' (changes will be applied on next server start)");
                                             json.save();
                                         } else {
@@ -104,6 +98,12 @@ public class WeaponCommand {
         return command.build();
     }
 
+    private void giveWeapon(CommandContext<CommandSourceStack> context) {
+        String ammunition = context.getArgument("weapon", String.class);
+        ItemStack itemStack = WeaponsRegistry.getWeapon(ammunition);
+        CommandUtils.giveItem(context, itemStack, 1);
+    }
+
 
 
     private LiteralArgumentBuilder<CommandSourceStack> getModifyArgument(CrystalWeapons plugin, Config.Data config) {
@@ -111,7 +111,7 @@ public class WeaponCommand {
                 .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.modify));
 
         for (Property propery : Property.values()) {
-            argument.then(propery.getArgument(plugin));
+            argument.then(propery.getArgument());
         }
 
         return argument;
@@ -119,49 +119,9 @@ public class WeaponCommand {
 
 
 
-    private void giveWeapon(CommandSender sender, String weapon, List<Entity> entities) {
-
-        ItemStack item = WeaponsRegistry.getWeapon(weapon);
-
-        LivingEntity livingEntity;
-        Player player;
-        for (Entity entity : entities) {
-            if (!entity.isDead()) {
-                if (entity instanceof Player) {
-                    player = (Player) entity;
-                    player.give(item);
-                } else if (entity instanceof LivingEntity) {
-                    livingEntity = (LivingEntity) entity;
-                    livingEntity.getEquipment().setItemInMainHand(item);
-                }
-            }
-        }
-        if (entities.size() > 1) {
-            sender.sendMessage(Component.text("Gave ").append(getWeaponToComponent(item)).append(Component.text(" to " + entities.size() + " entities")));
-        }
-        if (entities.size() == 1) {
-            sender.sendMessage(Component.text("Gave ").append(getWeaponToComponent(item)).append(Component.text(" to " + entities.getFirst().getName())));
-        }
-        if (entities.isEmpty()) {
-            sender.sendMessage("No entity was found.");
-        }
-    }
-
     private CompletableFuture<Suggestions> suggestWeapons(SuggestionsBuilder builder) {
         WeaponsRegistry.getItems().keySet().forEach(builder::suggest);
         return builder.buildFuture();
-    }
-
-    public static Component getWeaponToComponent(ItemStack weapon) {
-        return Component.text("")
-                .append(weapon.displayName().hoverEvent(HoverEvent.showText(weapon.getItemMeta().customName().appendNewline().append(
-                                Component.join(
-                                        JoinConfiguration.separator(Component.newline()),
-                                        weapon.lore()
-                                ))
-                        ))
-                )
-                .append(Component.text(""));
     }
 
 
@@ -170,10 +130,10 @@ public class WeaponCommand {
         automatic(BoolArgumentType.bool(), Boolean.class),
         synchronize_weapon_data(BoolArgumentType.bool(), Boolean.class),
         max_ammunition(IntegerArgumentType.integer(1), int.class),
-        max_distance(IntegerArgumentType.integer(1), int.class),
+        max_distance(DoubleArgumentType.doubleArg(0), double.class),
         shot_delay(IntegerArgumentType.integer(1),int.class),
         recoil(FloatArgumentType.floatArg(),float.class),
-        damage(DoubleArgumentType.doubleArg(1), double.class),
+        damage(DoubleArgumentType.doubleArg(0), double.class),
         inaccuracy(DoubleArgumentType.doubleArg(0), double.class),
         reload_time(IntegerArgumentType.integer(0),int.class),
         bullets_per_shot(IntegerArgumentType.integer(1), int.class);
@@ -199,7 +159,7 @@ public class WeaponCommand {
 
 
 
-        private <T> LiteralArgumentBuilder<CommandSourceStack> getArgument(CrystalWeapons plugin) {
+        private <T> LiteralArgumentBuilder<CommandSourceStack> getArgument() {
 
             return Commands.literal(this.name())
                     .then(Commands.argument("value", this.type)
@@ -238,7 +198,7 @@ public class WeaponCommand {
                                         sender.sendMessage(Component.text("Property ")
                                                 .append(Component.text(this.name()).hoverEvent(HoverEvent.showText(Component.text(this.path))))
                                                 .append(Component.text(" of "))
-                                                .append(WeaponCommand.getWeaponToComponent(item))
+                                                .append(CommandUtils.getItemAsComponent(item))
                                                 .append(Component.text(" is now set to "))
                                                 .append(Component.text(object.toString()))
 

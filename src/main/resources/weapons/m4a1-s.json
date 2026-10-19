@@ -1,0 +1,26 @@
+{
+  "item": {
+    "display_name": "M4A1-S",
+    "model": "default",
+    "gun_fire_animation_model": "default"
+  },
+  "sounds": {
+    "shoot": "m4a1s.shoot",
+    "reload": "m4a1s.reload"
+  },
+  "visual": {
+    "bullet_tracer_block": "GRAY_STAINED_GLASS",
+    "spawn_bullet_hit_decal": true
+  },
+  "max_ammunition": 20,
+  "max_magazines": 5,
+  "reload_time": 62,
+  "shot_delay": 2,
+  "damage": 1.8,
+  "inaccuracy": 0.011,
+  "recoil": 0.62,
+  "automatic": true,
+  "max_distance": 58.0,
+  "bullets_per_shot": 1,
+  "infinite_ammunition": false
+}

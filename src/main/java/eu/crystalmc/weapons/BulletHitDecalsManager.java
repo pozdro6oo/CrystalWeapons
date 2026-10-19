@@ -16,7 +16,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-class BulletHitDecals {
+class BulletHitDecalsManager {
 
     private static final Deque<ItemDisplay> decals = new ArrayDeque<>();
 
@@ -26,9 +26,9 @@ class BulletHitDecals {
     public static void start(ItemDisplay displayHit, Block hitBlock, JavaPlugin plugin, Config.Data data) {
         int limit = data.weapons.visual.bulletHitDecal.limit;
 
-        NBT.modify(displayHit, nbt -> {
-            nbt.setBoolean("is_bullet_hit_decal", true);
-        });
+//        NBT.modify(displayHit, nbt -> {
+//            nbt.setBoolean("is_bullet_hit_decal", true);
+//        });
 
         if (limit <= 0) {
             displayHit.remove();

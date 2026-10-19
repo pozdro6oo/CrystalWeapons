@@ -16,10 +16,12 @@ public class WeaponsRegistry {
     }
 
     public static void registerWeapon(String id, ItemStack item) {
-        WeaponsRegistry.items.put(id, item);
+        items.put(id, item);
     }
 
     public static ItemStack getWeapon(String id) {
+        if (!items.containsKey(id)) return null;
+
         ItemStack item = items.get(id).clone();
 
         ItemMeta meta = item.getItemMeta();

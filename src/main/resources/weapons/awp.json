@@ -1,0 +1,26 @@
+{
+  "item": {
+    "display_name": "AWP",
+    "model": "default",
+    "gun_fire_animation_model": "default"
+  },
+  "sounds": {
+    "shoot": "awp.shoot",
+    "reload": "awp.reload"
+  },
+  "visual": {
+    "bullet_tracer_block": "GRAY_STAINED_GLASS",
+    "spawn_bullet_hit_decal": true
+  },
+  "max_ammunition": 8,
+  "max_magazines": 5,
+  "reload_time": 74,
+  "shot_delay": 40,
+  "damage": 10.0,
+  "inaccuracy": 0.001,
+  "recoil": 4.0,
+  "automatic": false,
+  "max_distance": 175.0,
+  "bullets_per_shot": 1,
+  "infinite_ammunition": false
+}

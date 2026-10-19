@@ -10,8 +10,6 @@ import eu.crystalmc.weapons.utils.WeaponUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,7 +35,6 @@ import org.bukkit.util.Transformation;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -67,7 +64,7 @@ class WeaponLogic implements Listener {
 
         removeFireModel(item, weapon);
 
-        displayBullets(player, weapon.getAmmunition(), weapon.getMaxAmmunition());
+        displayBullets(player, weapon, WeaponUtils.getAmmunitionType(player, weapon));
     }
 
     // Prevent player from dropping a fired weapon
@@ -116,15 +113,23 @@ class WeaponLogic implements Listener {
             @Override
             public void run() {
                 if (!player.isHandRaised() || !player.isOnline() || !item.equals(player.getActiveItem())) {
-                    updateLore(item, weapon);
+                    WeaponUtils.updateLore(item, weapon);
                     updateAmmunition(item, weapon);
                     this.cancel();
                     return;
                 }
 
                 if (weapon.getAmmunition() == 0) {
-
-                    reload(player, weapon, item);
+                    if (config.isMagazineSystemEnabled()) {
+                        if (!WeaponUtils.hasAmmunitionType(player, weapon) && config.isMagazineSystemEnabled()) {
+                            player.clearActiveItem();
+                            showHotbar(player, "No ammunition");
+                        } else {
+                            reload(player, weapon, item);
+                        }
+                    } else {
+                        reload(player, weapon, item);
+                    }
                     this.cancel();
                     return;
                 }
@@ -137,7 +142,7 @@ class WeaponLogic implements Listener {
                     if (!weapon.isInfiniteAmmunition()) {
                         weapon.setAmmunition(weapon.getAmmunition() - 1);
                     }
-                    displayBullets(player, weapon.getAmmunition(), weapon.getMaxAmmunition());
+                    displayBullets(player, weapon, WeaponUtils.getAmmunitionType(player, weapon));
                     shoot(player, weapon, item);
 
                     if (!weapon.isAutomatic()) {
@@ -161,10 +166,6 @@ class WeaponLogic implements Listener {
         return sound;
     }
 
-    public static Component getBlueText(String string) {
-        return Component.text(string).color(NamedTextColor.BLUE).decoration(TextDecoration.ITALIC, false);
-    }
-
 
     private void updateAmmunition(ItemStack item, Weapon weapon) {
         if (item.getType() == Material.AIR) return;
@@ -172,7 +173,7 @@ class WeaponLogic implements Listener {
         NBT.modify(item, nbt -> {
             ReadWriteNBT compound = WeaponUtils.getNBT(nbt);
             if (compound != null) {
-                compound.setInteger("ammunition", weapon.getAmmunition());
+                compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getAmmunition());
             }
         });
     }
@@ -181,21 +182,22 @@ class WeaponLogic implements Listener {
         event.callEvent();
         if (event.isCancelled()) return;
 
-
-
         setCooldown(player, item, weapon.getReloadTime());
 
         Sound sound = playSound(player, "crystalmc:weapon." + weapon.getReloadSound(), 1.0F);
 
         new BukkitRunnable() {
             private int timer = 0;
+            private final EquipmentSlot equipmentSlot = player.getActiveItemHand();
 
             @Override
             public void run() {
-                showHotbar(player, "Reloading");
+                showHotbar(player, "Reloading...");
 
-                player.getEquipment();
-                if (!item.equals(player.getEquipment().getItem(player.getActiveItemHand()))) {
+                player.clearActiveItem();
+
+                // Cancelled.
+                if (!item.equals(player.getEquipment().getItem(equipmentSlot))) {
                     showHotbar(player, "Reload cancelled");
                     player.stopSound(sound);
                     setCooldown(player, item, 0);
@@ -203,34 +205,29 @@ class WeaponLogic implements Listener {
                     return;
                 }
 
+                //  Success.
                 if (timer == weapon.getReloadTime()) {
-                    showHotbar(player, "Reloaded");
-                    weapon.setAmmunition(weapon.getMaxAmmunition());
-                    updateAmmunition(item, weapon);
+                    player.setActiveItemRemainingTime(0);
+                    player.clearActiveItem();
 
-                    updateLore(item, weapon);
+                    if (!WeaponUtils.hasAmmunitionType(player, weapon) && config.isMagazineSystemEnabled()) {
+                        showHotbar(player, "Reload cancelled");
+                    } else {
+                        showHotbar(player, "Reloaded");
+                        weapon.setAmmunition(weapon.getMaxAmmunition());
+                        if (config.isMagazineSystemEnabled()) {
+                            WeaponUtils.removeAmmunitionType(player, weapon);
+                        }
+                        updateAmmunition(item, weapon);
 
+                        WeaponUtils.updateLore(item, weapon);
+                    }
                     this.cancel();
                     return;
                 }
                 timer++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
-    }
-
-    public static void updateLore(ItemStack item, Weapon weapon) {
-        ItemMeta meta = updateLore(item.getItemMeta(), weapon);
-        if (meta == null) return;
-        item.setItemMeta(meta);
-    }
-    public static ItemMeta updateLore(ItemMeta meta, Weapon weapon) {
-        if (meta == null) return null;
-        List<Component> lore = meta.lore();
-        if (lore != null && !lore.isEmpty()) {
-            lore.set(0, getBlueText("Ammunition: " + weapon.getAmmunition() + "/" + weapon.getMaxAmmunition()));
-            meta.lore(lore);
-        }
-        return meta;
     }
 
     private boolean shouldBeRefreshed(Player player, ItemStack item, Weapon weapon, Config.Data config) {
@@ -241,8 +238,6 @@ class WeaponLogic implements Listener {
         PlayerShootWeaponEvent event = new PlayerShootWeaponEvent(player, weapon, item);
         event.callEvent();
         if (event.isCancelled()) return;
-
-
 
         ItemMeta meta;
 
@@ -274,12 +269,12 @@ class WeaponLogic implements Listener {
                     if (currentMeta != null) {
                         currentMeta.setItemModel(NamespacedKey.fromString(model));
 
-                        item.setItemMeta(updateLore(currentMeta, weapon));
+                        item.setItemMeta(WeaponUtils.updateLore(currentMeta, weapon));
                     }
                 }
             }.runTaskLater(plugin, 3L);
         } else {
-            updateLore(item, weapon);
+            WeaponUtils.updateLore(item, weapon);
         }
 
         setCooldown(player, item, weapon.getShotDelay());
@@ -349,7 +344,7 @@ class WeaponLogic implements Listener {
     }
 
     private HitResult getHitLocation(Player player, Weapon weapon, Location playerPov) {
-        int distance = getMaxDistance(weapon);
+        double distance = getMaxDistance(weapon);
 
 
         boolean isStandingStill = player.getVelocity().getX() == 0.0
@@ -400,20 +395,28 @@ class WeaponLogic implements Listener {
     }
 
     private void createBulletTracer(Player player, HitResult hit, Weapon weapon) {
-        Vector direction = player.getEyeLocation().clone().getDirection().multiply(0.25);
+        Vector direction = player.getEyeLocation().getDirection().multiply(0.25);
 
+        // Fix visual eye location
         Location start = player.getEyeLocation().add(direction);
-        start.setY(start.getY() - 0.05);
+//        start.subtract(0, 0.05, 0);
 
+        // Calculate length
         Location hitLocation = hit.location();
-
         double length = start.distance(hitLocation);
-
         Location center = start.clone().add(
                 hitLocation.clone().subtract(start).multiply(0.5)
         );
 
+
         ItemDisplay displayTracer = start.getWorld().spawn(center, ItemDisplay.class);
+
+        // Rotate the display's local Z axis to face the hit location
+        Vector dir = direction.clone().normalize();
+        Location rotation = center.clone();
+        rotation.setDirection(dir);
+        displayTracer.setRotation(rotation.getYaw(), rotation.getPitch());
+
 
         Material tracerBlock;
         try {
@@ -457,9 +460,7 @@ class WeaponLogic implements Listener {
         // check for negative coordinates (closest block).
         if (!hitLocation.getBlock().getType().isSolid()) {
             Location check = hitLocation.clone();
-            check.setX(check.getX() - 0.1);
-            check.setZ(check.getZ() - 0.1);
-            check.setY(check.getY() - 0.1);
+            check.subtract(0.1, 0.1, 0.1);
             if (!check.getBlock().getType().isSolid()) {
                 return;
             } else {
@@ -472,22 +473,22 @@ class WeaponLogic implements Listener {
 
         ItemDisplay displayHit = start.getWorld().spawn(hitLocation, ItemDisplay.class);
 
-        displayHit.setItemStack(BulletHitDecals.texture);
+        displayHit.setItemStack(BulletHitDecalsManager.texture);
         displayHit.setBillboard(Display.Billboard.FIXED);
 
         displayHit.setTransformation(new Transformation(
                 new Vector3f(),
                 rotation,
-                new Vector3f(0.2F, 0.2F, 0.2F),
+                new Vector3f(0.2F),
                 new AxisAngle4f()
         ));
 
-        BulletHitDecals.start(displayHit, hitBlock, plugin, plugin.getConfiguration());
+        BulletHitDecalsManager.start(displayHit, hitBlock, plugin, plugin.getConfiguration());
     }
 
 
 
-    private int getMaxDistance(Weapon weapon) {
+    private double getMaxDistance(Weapon weapon) {
         Config.Data.Weapons.Gameplay.LimitDistanceForAllWeapons limit = plugin.getConfiguration().weapons.gameplay.limitDistanceForAllWeapons;
 
         if (limit.enabled) {
@@ -515,8 +516,8 @@ class WeaponLogic implements Listener {
         return rotation;
     }
 
-    private void displayBullets(Player player, int bullets, int maxBullets) {
-        showHotbar(player, "Ammunition: " + bullets + "/" + maxBullets);
+    private void displayBullets(Player player, Weapon weapon, int magazines) {
+        showHotbar(player, WeaponUtils.getAmmunitionText(weapon, config, magazines));
     }
 
     private byte getRandomFactor() {

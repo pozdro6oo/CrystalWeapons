@@ -1,0 +1,26 @@
+{
+  "item": {
+    "display_name": "M4A4",
+    "model": "default",
+    "gun_fire_animation_model": "default"
+  },
+  "sounds": {
+    "shoot": "m4a4.shoot",
+    "reload": "m4a4.reload"
+  },
+  "visual": {
+    "bullet_tracer_block": "GRAY_STAINED_GLASS",
+    "spawn_bullet_hit_decal": true
+  },
+  "max_ammunition": 30,
+  "max_magazines": 5,
+  "reload_time": 62,
+  "shot_delay": 2,
+  "damage": 2.2,
+  "inaccuracy": 0.016,
+  "recoil": 0.72,
+  "automatic": true,
+  "max_distance": 58.0,
+  "bullets_per_shot": 1,
+  "infinite_ammunition": false
+}

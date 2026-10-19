@@ -16,6 +16,9 @@ public class WeaponConfig {
     @SerializedName("max_ammunition")
     private int maxAmmunition = 12;
 
+    @SerializedName("ammunition_type")
+    private String ammunitionType = "rifle";
+
     @SerializedName("reload_time")
     private int reloadTime = 45;
 
@@ -35,7 +38,7 @@ public class WeaponConfig {
     private boolean automatic = true;
 
     @SerializedName("max_distance")
-    private int maxDistance = 58;
+    private double maxDistance = 58;
 
     @SerializedName("bullets_per_shot")
     private int bulletsPerShot = 1;
@@ -49,6 +52,10 @@ public class WeaponConfig {
 
     public int getMaxAmmunition() {
         return maxAmmunition;
+    }
+
+    public String getAmmunitionType() {
+        return ammunitionType;
     }
 
     public String getDisplayName() {
@@ -85,7 +92,7 @@ public class WeaponConfig {
         return automatic;
     }
 
-    public int getMaxDistance() {
+    public double getMaxDistance() {
         return maxDistance;
     }
 
