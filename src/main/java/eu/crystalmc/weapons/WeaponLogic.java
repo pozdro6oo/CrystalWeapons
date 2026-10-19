@@ -214,7 +214,7 @@ class WeaponLogic implements Listener {
                         showHotbar(player, "Reload cancelled");
                     } else {
                         showHotbar(player, "Reloaded");
-                        weapon.setAmmunition(weapon.getMaxAmmunition());
+                        weapon.setAmmunition(weapon.getMagazineSize());
                         if (config.isMagazineSystemEnabled()) {
                             WeaponUtils.removeAmmunitionType(player, weapon);
                         }

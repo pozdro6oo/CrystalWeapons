@@ -12,7 +12,7 @@
     "bullet_tracer_block": "GRAY_STAINED_GLASS",
     "spawn_bullet_hit_decal": true
   },
-  "max_ammunition": 12,
+  "magazine_size": 12,
   "reload_time": 46,
   "shot_delay": 5,
   "damage": 1.8,

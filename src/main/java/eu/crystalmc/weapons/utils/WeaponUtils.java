@@ -82,7 +82,7 @@ public class WeaponUtils {
         return text;
     }
     public static String getAmmunitionText(Weapon weapon) {
-        return "Ammunition: " + weapon.getAmmunition() + "/" + weapon.getMaxAmmunition();
+        return "Ammunition: " + weapon.getAmmunition() + "/" + weapon.getMagazineSize();
     }
 
 

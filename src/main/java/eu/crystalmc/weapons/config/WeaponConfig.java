@@ -13,8 +13,8 @@ public class WeaponConfig {
     @SerializedName("visual")
     private Visual visual = new Visual();
 
-    @SerializedName("max_ammunition")
-    private int maxAmmunition = 12;
+    @SerializedName("magazine_size")
+    private int magazineSize = 12;
 
     @SerializedName("ammunition_type")
     private String ammunitionType = "rifle";
@@ -50,8 +50,8 @@ public class WeaponConfig {
     public WeaponConfig() {
     }
 
-    public int getMaxAmmunition() {
-        return maxAmmunition;
+    public int getMagazineSize() {
+        return magazineSize;
     }
 
     public String getAmmunitionType() {

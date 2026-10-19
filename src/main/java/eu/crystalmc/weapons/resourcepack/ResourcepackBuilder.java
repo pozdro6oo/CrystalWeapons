@@ -233,7 +233,7 @@ public class ResourcepackBuilder {
 
 
         ReadWriteNBT compound = NBTUtils.nbtFromObject(weapon);
-        compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getMaxAmmunition());
+        compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getMagazineSize());
         compound.setBoolean(Weapon.Key.SYNCHRONIZE_WEAPON_DATA.key, true);
         compound.setString(Weapon.Key.RUNTIME.key, CrystalWeapons.RUNTIME);
         compound.setString(Weapon.Key.ID.key, name);
@@ -254,7 +254,7 @@ public class ResourcepackBuilder {
         Double accuracy = 1 - weapon.getInaccuracy();
 
         meta.lore(List.of(
-            getLoreLine("Ammunition: " + weapon.getMaxAmmunition() + "/" + weapon.getMaxAmmunition()),
+            getLoreLine("Ammunition: " + weapon.getMagazineSize() + "/" + weapon.getMagazineSize()),
             Component.empty(),
             getLoreLine("Statistics:", NamedTextColor.GRAY),
             getLoreLine(weapon.getDamage() + " Damage"),

@@ -9,7 +9,6 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
-import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.WeaponsRegistry;
 import eu.crystalmc.weapons.config.Config;
@@ -21,21 +20,16 @@ import eu.crystalmc.weapons.utils.WeaponUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.EntitySelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class WeaponCommand {
@@ -129,7 +123,7 @@ public class WeaponCommand {
         infinite_ammunition(BoolArgumentType.bool(), Boolean.class),
         automatic(BoolArgumentType.bool(), Boolean.class),
         synchronize_weapon_data(BoolArgumentType.bool(), Boolean.class),
-        max_ammunition(IntegerArgumentType.integer(1), int.class),
+        magazine_size(IntegerArgumentType.integer(1), int.class),
         max_distance(DoubleArgumentType.doubleArg(0), double.class),
         shot_delay(IntegerArgumentType.integer(1),int.class),
         recoil(FloatArgumentType.floatArg(),float.class),
