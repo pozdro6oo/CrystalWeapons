@@ -215,7 +215,12 @@ class WeaponLogic implements Listener {
                     if (config.isMagazineSystemEnabled()) {
                         String ammunitionType = WeaponUtils.getAmmunitionType(player, weapon);
                         if (WeaponUtils.hasAmmunitionType(player, ammunitionType)) {
-                            WeaponUtils.removeAmmunitionType(player, ammunitionType);
+                            boolean result = WeaponUtils.removeAmmunitionType(player, ammunitionType);
+                            if (!result) {
+                                showHotbar(player, "Reload cancelled");
+                                this.cancel();
+                                return;
+                            }
                         } else {
                             showHotbar(player, "Reload cancelled");
                             this.cancel();
