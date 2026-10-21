@@ -39,7 +39,7 @@ public class CommandUtils {
         CommandSender sender = context.getSource().getSender();
 
         if (item == null) {
-            sender.sendMessage(Component.text("&cUnknown item").color(NamedTextColor.RED));
+            sender.sendMessage(Component.text("Unknown item").color(NamedTextColor.RED));
             return;
         }
 
@@ -49,7 +49,7 @@ public class CommandUtils {
         try {
             entities = context.getArgument("entities", EntitySelectorArgumentResolver.class).resolve(context.getSource());
         } catch (CommandSyntaxException e) {
-            sender.sendMessage(Component.text("&cUnknown error").color(NamedTextColor.RED));
+            sender.sendMessage(Component.text("Unknown error").color(NamedTextColor.RED));
             return;
         }
 

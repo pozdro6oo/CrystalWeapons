@@ -4,6 +4,7 @@ import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import de.tr7zw.nbtapi.iface.ReadableNBT;
+import de.tr7zw.nbtapi.iface.ReadableNBTList;
 import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.Weapon;
@@ -15,6 +16,7 @@ import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -90,13 +92,20 @@ public class WeaponUtils {
     static public int getAmmunitionAmount(Player player, Weapon weapon) {
         int count = 0;
 
+        boolean contains;
         for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
+            Bukkit.getConsoleSender().sendMessage(ammunition.displayName());
             if (player.getInventory().containsAtLeast(ammunition, 1)) {
-                ReadableNBT compound = NBT.get(ammunition, nbt ->
-                        (ReadableNBT) nbt.getCompound(CrystalWeapons.WEAPON_COMPOUND));
-                if (compound != null) {
-                    if (compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())) {
-                        count++;
+                contains = NBT.get(ammunition, nbt ->
+                    (boolean) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())
+                );
+                if (contains) {
+                    for (ItemStack item : player.getInventory().getContents()) {
+                        if (item != null) {
+                            if (item.isSimilar(ammunition)) {
+                                count += item.getAmount();
+                            }
+                        }
                     }
                 }
             }
@@ -110,11 +119,14 @@ public class WeaponUtils {
     static public String getAmmunitionType(Player player, Weapon weapon) {
         for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
             if (player.getInventory().containsAtLeast(ammunition, 1)) {
-                ReadableNBT compound = NBT.get(ammunition, nbt -> (ReadableNBT) nbt.getCompound(CrystalWeapons.WEAPON_COMPOUND));
-                if (compound != null) {
-                    if (compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())) {
-                        return compound.getString(AmmunitionTypeConfig.Key.ID.key);
-                    }
+                boolean contains = NBT.get(ammunition, nbt ->
+                        (boolean) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key).contains(weapon.getId())
+                );
+                String id = NBT.get(ammunition, nbt ->
+                        (String) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getString(AmmunitionTypeConfig.Key.ID.key)
+                );
+                if (contains) {
+                    return id;
                 }
             }
 

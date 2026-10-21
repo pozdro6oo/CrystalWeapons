@@ -180,6 +180,8 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("sg553");
 
             setupDefaultAmmunitionType("rifle");
+            setupDefaultAmmunitionType("pistol");
+            setupDefaultAmmunitionType("sniper");
 
 
 

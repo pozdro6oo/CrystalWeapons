@@ -1,6 +1,7 @@
 package eu.crystalmc.weapons.listener;
 
 import eu.crystalmc.weapons.CrystalWeapons;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,7 +18,7 @@ public class DisableItemCrafting implements Listener {
     public void onPrepareCraft(PrepareItemCraftEvent event) {
         CraftingInventory inventory = event.getInventory();
         for (ItemStack itemStack : inventory.getMatrix()) {
-            if (isDisabled(itemStack)) {
+            if (isDisabled(itemStack) && itemStack.getType() != Material.AIR) {
                 inventory.setResult(null);
                 return;
             }
@@ -25,18 +26,34 @@ public class DisableItemCrafting implements Listener {
     }
 
     private boolean isDisabled(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
+        if (item == null || !item.hasItemMeta()) {
+            return false;
+        }
 
         ItemMeta meta = item.getItemMeta();
-        PersistentDataContainer container = meta.getPersistentDataContainer();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
 
+        NamespacedKey customDataKey = NamespacedKey.fromString("minecraft:custom_data");
+        if (customDataKey == null) {
+            return false;
+        }
 
-        NamespacedKey weaponKey = NamespacedKey.fromString(CrystalWeapons.WEAPON_COMPOUND);
+        PersistentDataContainer container =
+                pdc.get(customDataKey, PersistentDataType.TAG_CONTAINER);
 
-        NamespacedKey ammunitionKey = NamespacedKey.fromString(CrystalWeapons.AMMUNITION_COMPOUND);
+        if (container == null) {
+            return false;
+        }
 
-        return (weaponKey != null && container.has(weaponKey, PersistentDataType.TAG_CONTAINER))
-                ||
-                (ammunitionKey != null && container.has(ammunitionKey, PersistentDataType.TAG_CONTAINER));
+        NamespacedKey weaponKey =
+                NamespacedKey.fromString(CrystalWeapons.WEAPON_COMPOUND);
+
+        NamespacedKey ammunitionKey =
+                NamespacedKey.fromString(CrystalWeapons.AMMUNITION_COMPOUND);
+
+        return (weaponKey != null
+                && container.has(weaponKey, PersistentDataType.TAG_CONTAINER))
+                || (ammunitionKey != null
+                && container.has(ammunitionKey, PersistentDataType.TAG_CONTAINER));
     }
 }

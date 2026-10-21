@@ -36,17 +36,17 @@ public class AmmunitionCommand {
                                             giveAmmunitionType(context, 1);
                                             return Command.SINGLE_SUCCESS;
                                         })
-                                )
-                                .then(Commands.argument("count", IntegerArgumentType.integer(0))
-                                        .executes(context -> {
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(0, config.getMaxMagazineItemStackSize()))
+                                                .executes(context -> {
 
-                                            int count = context.getArgument("count", int.class);
+                                                    int count = context.getArgument("count", int.class);
 
-                                            giveAmmunitionType(context, count);
-                                            return Command.SINGLE_SUCCESS;
+                                                    giveAmmunitionType(context, count);
+                                                    return Command.SINGLE_SUCCESS;
 
 
-                                        })
+                                                })
+                                        )
                                 )
                         )
                 );

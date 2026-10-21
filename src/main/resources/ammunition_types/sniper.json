@@ -1,0 +1,8 @@
+{
+  "display_name": "Sniper Ammunition",
+  "model": "default",
+  "priority": 2,
+  "supported_weapons": [
+    "awp"
+  ]
+}
