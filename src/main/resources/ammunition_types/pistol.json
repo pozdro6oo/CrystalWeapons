@@ -1,8 +1,8 @@
 {
   "display_name": "Pistol Ammunition",
   "model": "default",
-  "priority": 2,
-  "supported_weapons": [
-    "glock-18"
+  "priority": 3,
+  "supported_weapon_types": [
+    "pistol"
   ]
 }

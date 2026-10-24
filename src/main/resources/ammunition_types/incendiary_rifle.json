@@ -1,0 +1,13 @@
+{
+  "display_name": "Incendiary Rifle Ammunition",
+  "model": "default",
+  "priority": 2,
+  "supported_weapon_types": [
+    "rifle"
+  ],
+    "modifiers": {
+    "apply_fire": {
+      "time": 65
+    }
+  }
+}

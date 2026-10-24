@@ -43,6 +43,8 @@ public class WeaponConfig {
     @SerializedName("infinite_ammunition")
     private boolean infiniteAmmunition = false;
 
+    private String type = "rifle";
+
     // for gson to work
     public WeaponConfig() {
     }
@@ -123,6 +125,10 @@ public class WeaponConfig {
 
     public boolean isSpawnBulletHitDecal() {
         return visual.spawnBulletHitDecal;
+    }
+
+    public String getType() {
+        return type;
     }
 
 

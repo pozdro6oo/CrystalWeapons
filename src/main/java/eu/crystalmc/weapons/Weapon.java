@@ -1,15 +1,15 @@
 package eu.crystalmc.weapons;
 
 import com.google.gson.annotations.SerializedName;
+import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.WeaponConfig;
+import org.jetbrains.annotations.Nullable;
 
 public class Weapon extends WeaponConfig {
 
     public enum Key {
         AMMUNITION,
-        ID,
-        SYNCHRONIZE_WEAPON_DATA,
-        RUNTIME;
+        ID;
 
         public final String key = this.toString().toLowerCase();
 
@@ -21,11 +21,10 @@ public class Weapon extends WeaponConfig {
     @SerializedName("id")
     private String id;
 
-    @SerializedName("synchronize_weapon_data")
-    private boolean synchronize_weapon_data;
 
-    @SerializedName("runtime")
-    private String runtime;
+    @Nullable
+    @SerializedName("modifiers")
+    private AmmunitionTypeConfig.Modifiers modifiers;
 
 
     public int getAmmunition() {
@@ -35,19 +34,15 @@ public class Weapon extends WeaponConfig {
         this.ammunition = ammunition;
     }
 
+    public @Nullable AmmunitionTypeConfig.Modifiers getModifiers() {
+        return modifiers;
+    }
+
 
     public String getId() {
         return id;
     }
 
 
-    public boolean isSynchronizeWeaponData() {return synchronize_weapon_data; }
 
-    public String getRuntime() {return runtime; }
-
-    public void setRuntime(String runtime) { this.runtime = runtime; }
-
-    public boolean isSynchronizedWithConfiguration() {
-        return runtime.equals(CrystalWeapons.RUNTIME);
-    }
 }

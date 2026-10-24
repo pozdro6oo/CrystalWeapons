@@ -1,11 +1,8 @@
 {
   "display_name": "Rifle Ammunition",
   "model": "default",
-  "priority": 2,
-  "supported_weapons": [
-    "ak47",
-    "m4a1-s",
-    "m4a4",
-    "sg553"
+  "priority": 3,
+  "supported_weapon_types": [
+    "rifle"
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "display_name": "Heavy Rifle Ammunition",
+  "model": "default",
+  "priority": 1,
+  "supported_weapon_types": [
+    "rifle"
+  ],
+  "modifiers": {
+    "add_damage": {
+      "amount" : 3.25
+    }
+  }
+}

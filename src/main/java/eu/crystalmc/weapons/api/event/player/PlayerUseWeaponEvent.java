@@ -21,17 +21,11 @@ public class PlayerUseWeaponEvent extends Event implements Cancellable {
         this.itemStack = itemStack;
     }
 
-    public Player getPlayer() {
-        return player;
-    }
+    public Player getPlayer() {return player;}
 
-    public Weapon getWeapon() {
-        return weapon;
-    }
+    public Weapon getWeapon() {return weapon;}
 
-    public ItemStack getItemStack() {
-        return itemStack;
-    }
+    public ItemStack getItemStack() {return itemStack;}
 
     private static final HandlerList HANDLER_LIST = new HandlerList();
     private boolean cancelled;

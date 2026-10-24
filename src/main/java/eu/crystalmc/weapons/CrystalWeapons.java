@@ -5,7 +5,9 @@ import eu.crystalmc.weapons.command.RemoveBulletHitDecalsCommand;
 import eu.crystalmc.weapons.command.WeaponCommand;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.listener.DisableItemCrafting;
-import eu.crystalmc.weapons.listener.SynchronizeWeaponWithConfiguration;
+import eu.crystalmc.weapons.listener.SynchronizeDataWithConfiguration;
+import eu.crystalmc.weapons.listener.modifier.AddDamageModifier;
+import eu.crystalmc.weapons.listener.modifier.ApplyFireModifier;
 import eu.crystalmc.weapons.resourcepack.ResourcepackBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
@@ -47,8 +49,10 @@ public final class CrystalWeapons extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new WeaponLogic(this), this);
         Bukkit.getPluginManager().registerEvents(new DisableItemCrafting(), this);
 
-        if (getConfiguration().isSynchronizeWeaponWithConfiguration()) {
-            Bukkit.getPluginManager().registerEvents(new SynchronizeWeaponWithConfiguration(this), this);
+        registerModifiers();
+
+        if (getConfiguration().isSynchronizeItemWithConfiguration()) {
+            Bukkit.getPluginManager().registerEvents(new SynchronizeDataWithConfiguration(this), this);
         }
 
         // register command
@@ -84,6 +88,10 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
 
+    public void registerModifiers() {
+        Bukkit.getPluginManager().registerEvents(new ApplyFireModifier(), this);
+        Bukkit.getPluginManager().registerEvents(new AddDamageModifier(), this);
+    }
 
 
 
@@ -175,13 +183,19 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("taser", false);
             setupDefaultWeapon("mag7");
             setupDefaultWeapon("glock18");
+
             setupDefaultWeapon("m4a4");
             setupDefaultWeapon("m4a1-s");
             setupDefaultWeapon("sg553");
 
             setupDefaultAmmunitionType("rifle");
+            setupDefaultAmmunitionType("heavy_rifle");
+            setupDefaultAmmunitionType("incendiary_rifle");
+
             setupDefaultAmmunitionType("pistol");
+
             setupDefaultAmmunitionType("sniper");
+            setupDefaultAmmunitionType("heavy_sniper");
 
 
 

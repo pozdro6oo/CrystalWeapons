@@ -1,0 +1,13 @@
+{
+  "display_name": "Sniper Ammunition",
+  "model": "default",
+  "priority": 1,
+  "supported_weapon_types": [
+    "sniper"
+  ],
+  "modifiers": {
+    "add_damage": {
+      "amount" : 3.25
+    }
+  }
+}

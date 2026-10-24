@@ -5,10 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
-import eu.crystalmc.weapons.AmmunitionTypesRegistry;
-import eu.crystalmc.weapons.CrystalWeapons;
-import eu.crystalmc.weapons.Weapon;
-import eu.crystalmc.weapons.WeaponsRegistry;
+import eu.crystalmc.weapons.*;
 import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.config.JsonConfig;
@@ -234,14 +231,22 @@ public class ResourcepackBuilder {
 
 
         ReadWriteNBT compound = NBTUtils.nbtFromObject(weapon);
-        compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getMagazineSize());
-        compound.setBoolean(Weapon.Key.SYNCHRONIZE_WEAPON_DATA.key, true);
-        compound.setString(Weapon.Key.RUNTIME.key, CrystalWeapons.RUNTIME);
+
+        int ammunition;
+        if (config.isCreateNewWeaponWithEmptyAmmunition()) {
+            ammunition = 0;
+        } else {
+            ammunition = weapon.getMagazineSize();
+        }
+
+        compound.setInteger(Weapon.Key.AMMUNITION.key, ammunition);
+        compound.setBoolean(Synchronizable.SYNCHRONIZE_DATA, true);
+        compound.setString(Synchronizable.RUNTIME, CrystalWeapons.RUNTIME);
         compound.setString(Weapon.Key.ID.key, name);
 
         NBT.modify(item, nbt -> {
                 nbt.getOrCreateCompound(CrystalWeapons.WEAPON_COMPOUND).mergeCompound(compound);
-            });
+        });
 
         ItemMeta meta = item.getItemMeta();
 
@@ -255,7 +260,7 @@ public class ResourcepackBuilder {
         Double accuracy = 1 - weapon.getInaccuracy();
 
         meta.lore(List.of(
-            getLoreLine("Ammunition: " + weapon.getMagazineSize() + "/" + weapon.getMagazineSize()),
+            getLoreLine("Ammunition: " + ammunition + "/" + weapon.getMagazineSize()),
             Component.empty(),
             getLoreLine("Statistics:", NamedTextColor.GRAY),
             getLoreLine(weapon.getDamage() + " Damage"),
@@ -278,12 +283,25 @@ public class ResourcepackBuilder {
         // Create item
         ItemStack item = new ItemStack(material);
 
+
+        ReadWriteNBT compound = NBTUtils.nbtFromObject(ammunitionTypeConfig);
+
+        compound.setString(AmmunitionTypeConfig.Key.ID.key, name);
+
+        compound.setBoolean(Synchronizable.SYNCHRONIZE_DATA, true);
+        compound.setString(Synchronizable.RUNTIME, CrystalWeapons.RUNTIME);
+        compound.setString(Weapon.Key.ID.key, name);
+
         NBT.modify(item, nbt -> {
-            ReadWriteNBT compound = nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND);
-            compound.setString(AmmunitionTypeConfig.Key.ID.key, name);
-            compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key)
-                    .addAll(ammunitionTypeConfig.getSupportedWeapons());
+            nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND).mergeCompound(compound);
         });
+
+//        NBT.modify(item, nbt -> {
+//            ReadWriteNBT compound = nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND);
+//            compound.setString(AmmunitionTypeConfig.Key.ID.key, name);
+//            compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPONS.key)
+//                    .addAll(ammunitionTypeConfig.getSupportedWeapons());
+//        });
 
         ItemMeta meta = item.getItemMeta();
 

@@ -31,8 +31,7 @@ public class CommandUtils {
         }
         assert hover != null;
 
-        return itemStack.displayName().hoverEvent(HoverEvent.showText(itemStack.getItemMeta().customName()
-        .append(itemStack.displayName().hoverEvent(HoverEvent.showText(hover)))));
+        return itemStack.displayName().hoverEvent(HoverEvent.showText(hover));
     }
 
     public static void giveItem(CommandContext<CommandSourceStack> context, ItemStack item, int count) {

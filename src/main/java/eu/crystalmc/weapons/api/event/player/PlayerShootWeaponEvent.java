@@ -8,19 +8,12 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NonNull;
 
-public class PlayerShootWeaponEvent extends Event implements Cancellable {
+public class PlayerShootWeaponEvent extends PlayerUseWeaponEvent {
 
-    private Player player;
-    private Weapon weapon;
-    private ItemStack itemStack;
 
     public PlayerShootWeaponEvent(Player player, Weapon weapon, ItemStack itemStack) {
-        this.weapon = weapon;
-        this.player = player;
-        this.itemStack = itemStack;
+        super(player, weapon, itemStack);
     }
-
-
 
 
 

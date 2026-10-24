@@ -14,9 +14,6 @@ public class PlayerReloadWeaponEvent extends PlayerUseWeaponEvent{
     }
 
 
-
-
-
     private static final HandlerList HANDLER_LIST = new HandlerList();
     private boolean cancelled;
 

@@ -58,7 +58,7 @@ public class Config {
             })
             public String useWeapon = "default";
 
-            @Comment("Effects entire '/weapon' command.")
+            @Comment("Effects both '/weapon' and '/ammunition' command.")
             public String command = "crystalweapons.command";
 
             public String give = "crystalweapons.command.give";
@@ -137,13 +137,17 @@ public class Config {
             @Configuration
             public static class ConfigurationData {
                 @Comment({
-                        "When enabled: synchronizes player's weapon with it's latest configuration."
+                        "When enabled: synchronizes player's item with it's latest configuration."
                 })
-                public boolean synchronizeWeaponWithConfiguration = true;
+                public boolean synchronizeItemWithConfiguration = true;
                 @Comment({
-                        "When enabled: removes weapon from player's inventory if it's configuration does not exist."
+                        "When enabled: removes item from player's inventory if it's configuration does not exist."
                 })
-                public boolean removeWeaponIfNotExist = false;
+                public boolean removeItemIfNotExist = false;
+
+                public boolean createNewWeaponWithEmptyAmmunition = false;
+
+                public boolean logOnSynchronization = true;
             }
 
 
@@ -160,7 +164,7 @@ public class Config {
 
                 public Double bulletHitboxSize = 0.10;
 
-                public MagazineSystem magazineSystem = new MagazineSystem();
+                public AmmunitionSystem ammunitionSystem = new AmmunitionSystem();
 
                 public LimitDistanceForAllWeapons limitDistanceForAllWeapons = new LimitDistanceForAllWeapons();
 
@@ -175,9 +179,9 @@ public class Config {
                 }
 
                 @Configuration
-                public static class MagazineSystem {
+                public static class AmmunitionSystem {
                     public Boolean enabled = true;
-                    public int maxStackSize = 18;
+                    public int maxStackSize = 16;
                 }
 
             }
@@ -228,15 +232,21 @@ public class Config {
 
 
         public int getMaxMagazineItemStackSize() {
-            return weapons.gameplay.magazineSystem.maxStackSize;
+            return weapons.gameplay.ammunitionSystem.maxStackSize;
         }
 
-        public boolean isSynchronizeWeaponWithConfiguration() {
-            return weapons.data.synchronizeWeaponWithConfiguration;
+        public boolean isSynchronizeItemWithConfiguration() {
+            return weapons.data.synchronizeItemWithConfiguration;
+        }
+        public boolean isCreateNewWeaponWithEmptyAmmunition() {
+            return weapons.data.createNewWeaponWithEmptyAmmunition;
+        }
+        public boolean isLogOnSynchronization() {
+            return weapons.data.logOnSynchronization;
         }
 
         public boolean isMagazineSystemEnabled() {
-            return weapons.gameplay.magazineSystem.enabled;
+            return weapons.gameplay.ammunitionSystem.enabled;
         }
 
         public Material getItemMaterial() {

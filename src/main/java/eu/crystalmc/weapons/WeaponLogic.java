@@ -2,9 +2,12 @@ package eu.crystalmc.weapons;
 
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import de.tr7zw.nbtapi.iface.ReadableNBT;
+import eu.crystalmc.weapons.api.event.player.EntityHitByWeaponEvent;
 import eu.crystalmc.weapons.api.event.player.PlayerReloadWeaponEvent;
 import eu.crystalmc.weapons.api.event.player.PlayerShootWeaponEvent;
 import eu.crystalmc.weapons.api.event.player.PlayerUseWeaponEvent;
+import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import net.kyori.adventure.key.Key;
@@ -223,6 +226,11 @@ class WeaponLogic implements Listener {
                             this.cancel();
                             return;
                         }
+
+                        ItemStack ammunitionItem = AmmunitionTypesRegistry.getAmmunitionType(ammunitionType);
+
+                        copyModifiers(item, ammunitionItem);
+
                     }
                     showHotbar(player, "Reloaded");
                     weapon.setAmmunition(weapon.getMagazineSize());
@@ -235,6 +243,24 @@ class WeaponLogic implements Listener {
                 timer++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
+    }
+
+    public void copyModifiers(ItemStack item, ItemStack ammunitionItem) {
+        if (item == null || ammunitionItem == null) return;
+
+        NBT.modify(item, nbt -> {
+            ReadWriteNBT compound = WeaponUtils.getNBT(nbt);
+            String key = AmmunitionTypeConfig.Key.MODIFIERS.key;
+            compound.removeKey(key);
+            NBT.get(ammunitionItem, nbt2 -> {
+                ReadableNBT compound2 = nbt2.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
+                ReadableNBT ammunitionModifiers = compound2.getCompound(key);
+                if (ammunitionModifiers != null) {
+                    compound.getOrCreateCompound(key).mergeCompound(ammunitionModifiers);
+                }
+
+            });
+        });
     }
 
     private boolean shouldBeRefreshed(Player player, ItemStack item, Weapon weapon, Config.Data config) {
@@ -288,8 +314,14 @@ class WeaponLogic implements Listener {
 
         playShootSound(player, weapon, config);
 
-        // ----------------------------------------------------------------------------------------------------------
+        applyDamage(player, weapon, item);
 
+        if (weapon.getRecoil() > 0) recoil(player, weapon);
+
+    }
+
+
+    private void applyDamage(Player player, Weapon weapon, ItemStack item) {
         Map<LivingEntity, Double> damageMap = new HashMap<>();
 
 
@@ -321,16 +353,22 @@ class WeaponLogic implements Listener {
         }
         // ----------------------------------------------------------------------------------------------------------
 
-        if (weapon.getRecoil() > 0) recoil(player, weapon);
-
         for (Map.Entry<LivingEntity, Double> entry : damageMap.entrySet()) {
-            entry.getKey().damage(entry.getValue(), player);
+            LivingEntity entity = entry.getKey();
+            Double damage = entry.getValue();
+
+            EntityHitByWeaponEvent event = new EntityHitByWeaponEvent(entity, weapon, item, player, damage);
+            event.callEvent();
+            if (event.isCancelled()) return;
+
+            entity.damage(event.getDamage(), player);
             entry.getKey().setNoDamageTicks(0);
+
         }
     }
 
 
-    private void setCooldown(Player player,  ItemStack item, int cooldown) {
+    private void setCooldown(Player player, ItemStack item, int cooldown) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 

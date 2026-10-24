@@ -22,5 +22,6 @@
   "automatic": true,
   "max_distance": 58.0,
   "bullets_per_shot": 1,
-  "infinite_ammunition": false
+  "infinite_ammunition": false,
+  "type": "rifle"
 }
