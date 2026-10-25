@@ -9,9 +9,6 @@ In order to create your own weapon you need to:
 6. Give your self a weapon by using "/giveweapon @p %your-weapon%" command.
 
 
-----------------------------------------------------------------------------------------------------------------------------------------
-
-
 File structure:
 
 📁 Crystal-Weapons
@@ -24,11 +21,3 @@ File structure:
     L-- 📁 sounds/
         |-- 🔊 shoot.ogg
         L-- 🔊 reload.ogg
-
-
-----------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-Advanced:
-    If you want to change assets use '/assets' not '/resourcepack' directory. '/resourcepack' is an auto-generated output
