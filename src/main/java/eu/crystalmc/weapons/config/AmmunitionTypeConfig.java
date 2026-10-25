@@ -52,6 +52,9 @@ public class AmmunitionTypeConfig {
         @Nullable
         @SerializedName("add_damage")
         public AddDamage addDamage = null;
+
+        @SerializedName("custom")
+        public List<String> custom = Collections.emptyList();
     }
 
     public static class Modifier {
