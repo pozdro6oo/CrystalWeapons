@@ -6,10 +6,7 @@ import com.google.gson.JsonObject;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import eu.crystalmc.weapons.*;
-import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
-import eu.crystalmc.weapons.config.Config;
-import eu.crystalmc.weapons.config.JsonConfig;
-import eu.crystalmc.weapons.config.WeaponConfig;
+import eu.crystalmc.weapons.config.*;
 import eu.crystalmc.weapons.config.resourcepack.FireAnimationTexture;
 import eu.crystalmc.weapons.config.resourcepack.Item;
 import eu.crystalmc.weapons.config.resourcepack.Model;
@@ -556,27 +553,29 @@ public class ResourcepackBuilder {
         Config.Data data = plugin.getConfiguration();
         try {
             switch (data.resourcepack.mode) {
-                case "upload" -> {
-                    hostUpload(resourcepack, data.resourcepack.modeUpload);
+                case "host_locally" -> {
+                    hostLocally(resourcepack, data.resourcepack.hostLocally);
                 }
-                case "provided" -> {
+                case "upload_ftp" -> {
+                    uploadFtp(resourcepack, data.resourcepack.uploadFtp);
+                }
+                case "upload_http" -> {
                     return;
                 }
-                // auto
-                default -> {
-                    hostAuto(resourcepack, data.resourcepack.modeAuto);
-                    String address = "http://" + data.resourcepack.modeAuto.address + ":" + data.resourcepack.modeAuto.port + "/" + resourcepack.getName();
-                    addResourcepack(address, resourcepack.toPath());
+            }
+            if (data.resourcepack.downloadFrom.enabled) {
+                try {
+                    addResourcepack(data.resourcepack.downloadFrom.host, resourcepack.toPath());
+                } catch (URISyntaxException | NoSuchAlgorithmException e) {
+                    plugin.sendError("Error while trying add resourcepack");
                 }
             }
         } catch (IOException e) {
             plugin.sendError("Error while trying to host/upload resourcepack");
-        } catch (URISyntaxException | NoSuchAlgorithmException e) {
-            plugin.sendError("Error while trying add resourcepack");
         }
     }
 
-    private void hostAuto(File resourcepack, Config.Data.Resourcepack.ModeAuto config) throws IOException {
+    private void hostLocally(File resourcepack, Config.Data.Resourcepack.HostLocally config) throws IOException {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -592,10 +591,9 @@ public class ResourcepackBuilder {
 
     }
 
-    private void hostUpload(File resourcepack, Config.Data.Resourcepack.ModeUpload config) throws IOException {
+    private void uploadFtp(File resourcepack, Config.Data.Resourcepack.UploadFtp config) throws IOException {
         FTPUtils.uploadFile(config.host, config.user, config.password, resourcepack.getAbsolutePath(), config.uploadFile);
     }
-
 
 
 
@@ -669,6 +667,7 @@ public class ResourcepackBuilder {
                 .build();
 
 
+        plugin.sendInfo("Resourcepack host: '" + address + "'");
         Bukkit.getPluginManager().registerEvents(new Send(packRequest), plugin);
     }
 

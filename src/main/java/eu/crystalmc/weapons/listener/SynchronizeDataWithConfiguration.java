@@ -4,6 +4,7 @@ import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import eu.crystalmc.weapons.*;
 import eu.crystalmc.weapons.config.Config;
+import eu.crystalmc.weapons.config.Synchronizable;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,8 +13,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.Objects;
 
 public class SynchronizeDataWithConfiguration implements Listener {
     private final CrystalWeapons plugin;

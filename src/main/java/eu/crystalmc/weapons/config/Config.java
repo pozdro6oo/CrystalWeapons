@@ -189,41 +189,40 @@ public class Config {
 
         @Configuration
         public static class Resourcepack {
+
+            public DownloadFrom downloadFrom = new DownloadFrom();
+
             @Comment({
                     "Can be set to:",
-                    "- auto         host locally resourcepack.",
-                    "- upload       upload resourcepack to a provided ftp server.",
-                    "- provided     does not host or upload resourcepack but sends pack to user from provided address.",
-                    "- none         does nothing."
+                    "- host_locally     host resourcepack locally on http server.",
+                    "- *upload_http*    upload resourcepack to a provided http server (not implemented).",
+                    "- upload_ftp       upload resourcepack to a provided ftp server.",
+                    "- none             does nothing."
             })
-            public String mode = "auto";
+            public String mode = "host_locally";
 
-            public ModeAuto modeAuto = new ModeAuto();
-            public ModeUpload modeUpload = new ModeUpload();
-            public ModeProvided modeProvided = new ModeProvided();
+            public HostLocally hostLocally = new HostLocally();
+            public UploadFtp uploadFtp = new UploadFtp();
 
             @Configuration
-            public static class ModeAuto {
+            public static class HostLocally {
                 @Comment("You need to make this port public in-order for other players to download resourcepack.")
                 public int port = 80;
-                @Comment({
-                        "This is your external ip-address, domain or whatever.",
-                        "Default: localhost (will only work for you)."
-                })
-                public String address = "localhost";
             }
 
             @Configuration
-            public static class ModeUpload {
+            public static class UploadFtp {
                 public String host = "0.0.0.0";
                 public String user = "default";
                 public String password = "password";
                 public String uploadFile = "/resourcepack.zip";
             }
 
+
             @Configuration
-            public static class ModeProvided {
-                public String address = "https://your-website:8080/resourcepack.zip";
+            public static class DownloadFrom {
+                public boolean enabled = true;
+                public String host = "http://localhost/resourcepack.zip";
             }
 
 

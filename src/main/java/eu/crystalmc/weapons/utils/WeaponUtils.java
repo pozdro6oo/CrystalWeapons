@@ -2,11 +2,10 @@ package eu.crystalmc.weapons.utils;
 
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
-import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import de.tr7zw.nbtapi.iface.ReadableNBT;
 import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
-import eu.crystalmc.weapons.Synchronizable;
+import eu.crystalmc.weapons.config.Synchronizable;
 import eu.crystalmc.weapons.Weapon;
 import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;

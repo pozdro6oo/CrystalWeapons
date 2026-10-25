@@ -58,6 +58,7 @@ class WeaponLogic implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItem(event.getNewSlot());
         if (item == null) return;
+        if (item.getType() == Material.AIR) return;
 
         Weapon weapon = WeaponUtils.getWeapon(item);
         if (weapon == null) return;
@@ -72,6 +73,8 @@ class WeaponLogic implements Listener {
     public void onDrop(PlayerDropItemEvent event) {
         ItemStack item = event.getItemDrop().getItemStack();
 
+        if (item.getType() == Material.AIR) return;
+
         Weapon weapon = WeaponUtils.getWeapon(item);
         if (weapon == null) return;
 
@@ -83,6 +86,8 @@ class WeaponLogic implements Listener {
         if (!plugin.hasPermission(event.getPlayer(), usePermission)) return;
 
         ItemStack item = event.getPlayer().getEquipment().getItem(EquipmentSlot.HAND);
+
+        if (item.getType() == Material.AIR) return;
 
         Weapon weapon = WeaponUtils.getWeapon(item);
         if (weapon == null) return;
@@ -173,8 +178,12 @@ class WeaponLogic implements Listener {
 
         NBT.modify(item, nbt -> {
             ReadWriteNBT compound = WeaponUtils.getNBT(nbt);
+            int ammunition = weapon.getAmmunition();
             if (compound != null) {
-                compound.setInteger(Weapon.Key.AMMUNITION.key, weapon.getAmmunition());
+                compound.setInteger(Weapon.Key.AMMUNITION.key, ammunition);
+                if (ammunition == 0) {
+                    compound.removeKey(AmmunitionTypeConfig.Key.MODIFIERS.key);
+                }
             }
         });
     }

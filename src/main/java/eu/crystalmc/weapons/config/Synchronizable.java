@@ -1,6 +1,7 @@
-package eu.crystalmc.weapons;
+package eu.crystalmc.weapons.config;
 
 import com.google.gson.annotations.SerializedName;
+import eu.crystalmc.weapons.CrystalWeapons;
 
 public class Synchronizable {
     public static String SYNCHRONIZE_DATA = "synchronize_data";

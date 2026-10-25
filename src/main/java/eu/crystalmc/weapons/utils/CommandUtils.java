@@ -65,7 +65,7 @@ public class CommandUtils {
                 }
             }
         }
-        Component text = Component.text("Gave ").append(CommandUtils.getItemAsComponent(item));
+        Component text = Component.text("Gave " + item.getAmount() + " ").append(CommandUtils.getItemAsComponent(item));
 
         if (entities.size() > 1) {
             sender.sendMessage(text.append(Component.text(" to " + entities.size() + " entities")));
