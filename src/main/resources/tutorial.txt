@@ -11,7 +11,7 @@ In order to create your own weapon you need to:
 
 File structure:
 
-📁 Crystal-Weapons
+📁 CrystalWeapons
 |
 |--- 📁 weapons/
 |   |-- 📄 your_weapon.json
