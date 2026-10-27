@@ -1,6 +1,6 @@
 {
   "display_name": "Incendiary Rifle Ammunition",
-  "model": "default",
+  "model": "ammunition_type/default",
   "priority": 2,
   "supported_weapon_types": [
     "rifle"

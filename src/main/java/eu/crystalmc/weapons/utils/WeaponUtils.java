@@ -12,10 +12,12 @@ import eu.crystalmc.weapons.config.Config;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -40,12 +42,12 @@ public class WeaponUtils {
 
 
 
-    public static String getFireAnimationModel(Weapon weapon) {
-        return "crystalmc:fired_weapon/" + weapon.getId();
+    public static NamespacedKey getModel(Weapon weapon) {
+        return NamespacedKey.fromString("crystalmc:weapon/" + weapon.getId());
     }
 
-    public static String getModel(Weapon weapon) {
-        return "crystalmc:weapon/" + weapon.getId();
+    public static NamespacedKey getIdleModel(Weapon weapon) {
+        return NamespacedKey.fromString("crystalmc:weapon_idle/" + weapon.getId());
     }
 
     public static NamespacedKey createCooldownGroup() {
@@ -176,7 +178,8 @@ public class WeaponUtils {
         Consumable.Builder builder = Consumable.consumable()
                 .hasConsumeParticles(false)
                 .animation(animation)
-                .consumeSeconds(20);
+                .sound(Key.key("none"))
+                .consumeSeconds(60);
         item.setData(DataComponentTypes.CONSUMABLE, builder.build());
     }
 

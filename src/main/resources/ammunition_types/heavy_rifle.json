@@ -1,6 +1,6 @@
 {
   "display_name": "Heavy Rifle Ammunition",
-  "model": "default",
+  "model": "ammunition_type/default",
   "priority": 1,
   "supported_weapon_types": [
     "rifle"

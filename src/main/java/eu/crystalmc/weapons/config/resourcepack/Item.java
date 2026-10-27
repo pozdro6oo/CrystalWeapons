@@ -16,10 +16,6 @@ public class Item {
 
     public static class CustomModel {
         public CustomModel() {}
-        public CustomModel(String type, String model) {
-            this.type = type;
-            this.model = model;
-        }
 
         @SerializedName("type")
         public String type = "minecraft:model";

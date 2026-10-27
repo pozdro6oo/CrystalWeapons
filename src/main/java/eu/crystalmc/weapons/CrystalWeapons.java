@@ -172,7 +172,8 @@ public final class CrystalWeapons extends JavaPlugin {
 
     private void setupDefaultConfiguration() {
         if (this.isSetup()) {
-            this.saveResource("assets/models/weapon/default.json", false);
+            this.saveResource("assets/items/default_item.json", false);
+            this.saveResource("assets/models/weapon_idle/default.json", false);
             this.saveResource("assets/models/weapon_item/default.json", false);
             this.saveResource("assets/models/ammunition_type/default.json", false);
 

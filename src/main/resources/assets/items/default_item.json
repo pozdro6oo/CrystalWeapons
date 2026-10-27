@@ -1,0 +1,46 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      {
+        "type": "minecraft:select",
+        "property": "minecraft:display_context",
+        "cases": [
+          {
+            "when": [
+              "firstperson_righthand",
+              "firstperson_lefthand",
+              "thirdperson_righthand",
+              "thirdperson_lefthand"
+            ],
+            "model": {
+              "type": "minecraft:condition",
+              "property": "minecraft:using_item",
+              "on_true": {
+                "type": "minecraft:composite",
+                "models": [
+                  {
+                    "type": "minecraft:model",
+                    "model": "_IDLE-MODEL_"
+                  },
+                  {
+                    "type": "minecraft:model",
+                    "model": "_FIRE-MODEL_"
+                  }
+                ]
+              },
+              "on_false": {
+                "type": "minecraft:model",
+                "model": "_IDLE-MODEL_"
+              }
+            }
+          }
+        ],
+        "fallback": {
+          "type": "minecraft:model",
+          "model": "_ITEM-MODEL_"
+        }
+      }
+    ]
+  }
+}

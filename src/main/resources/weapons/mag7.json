@@ -1,8 +1,9 @@
 {
   "item": {
     "display_name": "Mag-7",
-    "model": "default",
-    "fired_model": "default"
+    "model": "weapon_idle/default",
+    "fire_model": "weapon_fire/default",
+    "item_model": "weapon_item/default"
   },
   "sounds": {
     "shoot": "mag7.shoot",

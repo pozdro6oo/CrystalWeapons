@@ -1,8 +1,9 @@
 {
   "item": {
     "display_name": "M4A4",
-    "model": "default",
-    "fired_model": "default"
+    "model": "weapon_idle/default",
+    "fire_model": "weapon_fire/default",
+    "item_model": "weapon_item/default"
   },
   "sounds": {
     "shoot": "m4a4.shoot",
@@ -12,8 +13,7 @@
     "bullet_tracer_block": "GRAY_STAINED_GLASS",
     "spawn_bullet_hit_decal": true
   },
-  "max_ammunition": 30,
-  "max_magazines": 5,
+  "magazine_size": 30,
   "reload_time": 62,
   "shot_delay": 2,
   "damage": 2.2,

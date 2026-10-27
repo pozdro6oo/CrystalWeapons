@@ -8,7 +8,7 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.Nullable;
 
 public class ApplyFireModifier implements Listener {
-    @EventHandler(priority = EventPriority.NORMAL)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPrepareCraft(EntityHitByWeaponEvent event) {
         @Nullable AmmunitionTypeConfig.Modifiers modifiers = event.getWeapon().getModifiers();
         if (modifiers == null) return;

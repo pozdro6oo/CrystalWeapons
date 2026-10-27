@@ -113,10 +113,14 @@ public class WeaponConfig {
     }
 
 
-    public String getGunFireAnimationModel() {return item.firedModel;}
+    public String getFireModel() {return item.fireModel;}
 
-    public String getModel() {
+    public String getIdleModel() {
         return item.model;
+    }
+
+    public String getItemModel() {
+        return item.itemModel;
     }
 
 
@@ -141,13 +145,14 @@ public class WeaponConfig {
         private String displayName = "Weapon";
 
         @SerializedName("model")
-        private String model = "default";
+        private String model = "weapon_idle/default";
 
-        @SerializedName("item-model")
-        private String itemModel = "default";
 
-        @SerializedName("fired_model")
-        private String firedModel = "default";
+        @SerializedName("item_model")
+        private String itemModel = "weapon_item/default";
+
+        @SerializedName("fire_model")
+        private String fireModel = "weapon_fire/default";
     }
 
     public static class Visual {

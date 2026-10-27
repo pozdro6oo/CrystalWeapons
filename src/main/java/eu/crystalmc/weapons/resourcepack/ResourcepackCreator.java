@@ -67,11 +67,12 @@ public class ResourcepackCreator {
 
             Files.createDirectories(assets);
             Files.createDirectories(crystalFolder.resolve("items"));
+            Files.createDirectories(crystalFolder.resolve("items").resolve("weapon"));
             Files.createDirectories(crystalFolder.resolve("sounds"));
+            Files.createDirectories(crystalFolder.resolve("textures"));
             Files.createDirectories(crystalFolder.resolve("textures").resolve("item").resolve("weapon"));
             Files.createDirectories(crystalFolder.resolve("textures").resolve("item").resolve("ammunition_type"));
             Files.createDirectories(crystalFolder.resolve("models"));
-            Files.createDirectories(crystalFolder.resolve("textures"));
 
         } catch (IOException e) {
             plugin.sendError("Cannot create directories");
@@ -195,7 +196,7 @@ public class ResourcepackCreator {
         ItemStack item = createAmmunitionTypeItemStack(name, ammunitionType);
 
         createModel(name, "ammunition_type", ammunitionType.getModel());
-        createAmmunitionTypeItem(name);
+        createItem(name, "ammunition_type");
 
         AmmunitionTypesRegistry.registerAmmunitionType(name, item, ammunitionType);
     }
@@ -203,10 +204,18 @@ public class ResourcepackCreator {
     private void generateWeapon(String name, WeaponConfig config, File texture) {
         ItemStack item = createWeaponItemStack(name, config);
 
-        createModel(name, "weapon", config.getModel());
+        createModel(name, "weapon", config.getIdleModel());
+
+        File weaponItemFile = getCrystalmcFolder().resolve("models").resolve("item_weapon").resolve(name + ".json").toFile();
+        createModel(weaponItemFile, "weapon/" + name, config.getItemModel());
+
+        createItem(name, "weapon_idle", "weapon/" + name);
+
         createWeaponItem(name, config);
 
         WeaponsRegistry.registerWeapon(name, item);
+
+
     }
 
 
@@ -353,29 +362,40 @@ public class ResourcepackCreator {
 
 
 
-    private void createModel(String name, String folder, String modelName) {
+    private void createModel(String name, String folder, String parent) {
+        createModel(name, folder, folder, parent);
+    }
+
+    private void createModel(String name, String folder, String keyFolder, String parent) {
         File modelFile = getCrystalmcFolder().resolve("models").resolve(folder).resolve(name + ".json").toFile();
 
-        JsonConfig<Model> model = new JsonConfig<>(modelFile, Model.class);
+        createModel(modelFile, keyFolder + "/" + name, parent);
+    }
+
+    private void createModel(File file, String texture, String parent) {
+        JsonConfig<Model> model = new JsonConfig<>(file, Model.class);
 
         model.load();
-        model.config.textures.layer0 = "crystalmc:item/"+folder+"/" + name;
-        model.config.parent = "crystalmc:"+folder+"/" + modelName;
-
+        model.config.textures.layer0 = "crystalmc:item/"+texture;
+        model.config.parent = "crystalmc:"+parent;
         model.save();
     }
 
 
     private void createItem(String name, String folder) {
-        File modelFile = getCrystalmcFolder().resolve("items").resolve(folder).resolve(name + ".json").toFile();
+        createItem(name, folder, folder+ "/" + name);
 
-        JsonConfig<Item> model = new JsonConfig<>(modelFile, Item.class);
+    }
 
-        model.load();
-        model.config.model.type = "minecraft:model";
-        model.config.model.model = "";
-        model.config.model.model = "crystalmc:" +folder+ "/" + name;
-        model.save();
+    private void createItem(String name, String folder, String model) {
+        File itemFile = getCrystalmcFolder().resolve("items").resolve(folder).resolve(name + ".json").toFile();
+
+        JsonConfig<Item> item = new JsonConfig<>(itemFile, Item.class);
+
+        item.load();
+        item.config.model.type = "minecraft:model";
+        item.config.model.model = "crystalmc:" + model;
+        item.save();
 
     }
 
@@ -383,26 +403,35 @@ public class ResourcepackCreator {
 
 
     private void createWeaponItem(String name, WeaponConfig weaponConfig) {
-        File modelFireFile = getCrystalmcFolder().resolve("items").resolve("fired_weapon").resolve(name + ".json").toFile();
-
-        JsonConfig<Item> modelFire = new JsonConfig<>(modelFireFile, Item.class);
-
-        modelFire.load();
-        modelFire.config.model.type = "minecraft:composite";
-        modelFire.config.model.model = "";
-        modelFire.config.model.models = List.of(
-                new Item.CustomModel("minecraft:model", "crystalmc:weapon/" + name),
-                new Item.CustomModel("minecraft:model", "crystalmc:weapon_fire/" + weaponConfig.getGunFireAnimationModel())
-        );
-        modelFire.save();
+        Path defaultItem = plugin.getDataPath().resolve("assets").resolve("items").resolve("default_item.json");
+        Path item = getCrystalmcFolder().resolve("items").resolve("weapon").resolve(name + ".json");
 
 
-        createItem(name, "weapon");
+        String data;
+        try {
+            data = Files.readString(defaultItem, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            plugin.sendError("Could not read default item");
+            return;
+        }
+
+
+        data = data
+                .replaceAll("_IDLE-MODEL_", "crystalmc:" + "weapon/" + name)
+                .replaceAll("_FIRE-MODEL_", "crystalmc:" + weaponConfig.getFireModel())
+                .replaceAll("_ITEM-MODEL_", "crystalmc:" + "item_weapon/" + name);
+
+
+        item.toFile().getParentFile().mkdirs();
+        try {
+            Files.writeString(item, data, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            plugin.sendError("Could not write item");
+            plugin.sendError(e.getMessage());
+        }
+
     }
 
-    private void createAmmunitionTypeItem(String name) {
-        createItem(name, "ammunition_type");
-    }
 
 
 

@@ -1,6 +1,6 @@
 {
   "display_name": "Pistol Ammunition",
-  "model": "default",
+  "model": "ammunition_type/default",
   "priority": 3,
   "supported_weapon_types": [
     "pistol"

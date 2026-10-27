@@ -63,23 +63,23 @@ class WeaponLogic implements Listener {
         Weapon weapon = WeaponUtils.getWeapon(item);
         if (weapon == null) return;
 
-        removeFireModel(item, weapon);
+//        removeFireModel(item, weapon);
 
         displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
     }
 
     // Prevent player from dropping a fired weapon
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void onDrop(PlayerDropItemEvent event) {
-        ItemStack item = event.getItemDrop().getItemStack();
-
-        if (item.getType() == Material.AIR) return;
-
-        Weapon weapon = WeaponUtils.getWeapon(item);
-        if (weapon == null) return;
-
-        removeFireModel(item, weapon);
-    }
+//    @EventHandler(priority = EventPriority.NORMAL)
+//    public void onDrop(PlayerDropItemEvent event) {
+//        ItemStack item = event.getItemDrop().getItemStack();
+//
+//        if (item.getType() == Material.AIR) return;
+//
+//        Weapon weapon = WeaponUtils.getWeapon(item);
+//        if (weapon == null) return;
+//
+////        removeFireModel(item, weapon);
+//    }
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onRightClick(PlayerInteractEvent event) {
@@ -95,22 +95,28 @@ class WeaponLogic implements Listener {
         useWeapon(event.getPlayer(), item, weapon);
     }
 
-    private void removeFireModel(ItemStack item, Weapon weapon) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || meta.getItemModel() == null) return;
-
-        if (meta.getItemModel().toString().equals(WeaponUtils.getFireAnimationModel(weapon))) {
-            meta.setItemModel(NamespacedKey.fromString(WeaponUtils.getModel(weapon)));
-            item.setItemMeta(meta);
-        }
-
-    }
+//    private void removeFireModel(ItemStack item, Weapon weapon) {
+//        ItemMeta meta = item.getItemMeta();
+//        if (meta == null || meta.getItemModel() == null) return;
+//
+//        if (meta.getItemModel().toString().equals(WeaponUtils.getFireAnimationModel(weapon))) {
+//            meta.setItemModel(NamespacedKey.fromString(WeaponUtils.getModel(weapon)));
+//            item.setItemMeta(meta);
+//        }
+//
+//    }
 
 
     private void useWeapon(Player player, ItemStack item, Weapon weapon) {
         PlayerUseWeaponEvent event = new PlayerUseWeaponEvent(player, weapon, item);
         event.callEvent();
         if (event.isCancelled()) return;
+
+        if (config.weapons.visual.enableFireAnimation) {
+            ItemMeta meta = item.getItemMeta();
+            meta.setItemModel(WeaponUtils.getModel(weapon));
+            item.setItemMeta(meta);
+        }
 
         new BukkitRunnable() {
             private int timer = 0;
@@ -183,6 +189,8 @@ class WeaponLogic implements Listener {
                 compound.setInteger(Weapon.Key.AMMUNITION.key, ammunition);
                 if (ammunition == 0) {
                     compound.removeKey(AmmunitionTypeConfig.Key.MODIFIERS.key);
+                    @todo
+                    nbt.setString("minecraft:item_model", WeaponUtils.getIdleModel(weapon).toString());
                 }
             }
         });
@@ -281,10 +289,7 @@ class WeaponLogic implements Listener {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        ItemMeta meta;
-
-        String model = WeaponUtils.getModel(weapon);
-        String modelFire = WeaponUtils.getFireAnimationModel(weapon);
+        NamespacedKey idleModel = WeaponUtils.getIdleModel(weapon);
 
         if (shouldBeRefreshed(player, item, weapon, config)) {
             updateAmmunition(item, weapon);
@@ -293,23 +298,18 @@ class WeaponLogic implements Listener {
 
         // Firing animation.
         if (config.weapons.visual.enableFireAnimation) {
-            meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setItemModel(NamespacedKey.fromString(modelFire));
-                item.setItemMeta(meta);
-            }
-
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     // Fixes the firing animation.
                     if (!shouldBeRefreshed(player, item, weapon, config)) {
+                        this.cancel();
                         return;
                     }
                     ItemMeta currentMeta = item.getItemMeta();
 
                     if (currentMeta != null) {
-                        currentMeta.setItemModel(NamespacedKey.fromString(model));
+                        currentMeta.setItemModel(idleModel);
 
                         item.setItemMeta(WeaponUtils.updateLore(currentMeta, weapon));
                     }
@@ -318,6 +318,8 @@ class WeaponLogic implements Listener {
         } else {
             WeaponUtils.updateLore(item, weapon);
         }
+
+
 
         setCooldown(player, item, weapon.getShotDelay());
 
@@ -382,7 +384,7 @@ class WeaponLogic implements Listener {
         if (meta == null) return;
 
         NamespacedKey group = meta.getUseCooldown().getCooldownGroup();
-        assert group != null;
+        if (group == null) return;
         player.setCooldown(group, cooldown);
     }
 
@@ -449,24 +451,23 @@ class WeaponLogic implements Listener {
     }
 
     private void createBulletTracer(Player player, HitResult hit, Weapon weapon) {
-        Vector direction = player.getEyeLocation().getDirection().multiply(0.25);
+        Vector direction = player.getEyeLocation().getDirection();
 
         // Fix visual eye location
-        Location start = player.getEyeLocation().add(direction);
-//        start.subtract(0, 0.05, 0);
+        Location start = player.getEyeLocation();
 
         // Calculate length
         Location hitLocation = hit.location();
         double length = start.distance(hitLocation);
-        Location center = start.clone().add(
-                hitLocation.clone().subtract(start).multiply(0.5)
+        Location center = start.add(
+                hitLocation.subtract(start).multiply(0.5)
         );
 
 
         ItemDisplay displayTracer = start.getWorld().spawn(center, ItemDisplay.class);
 
         // Rotate the display's local Z axis to face the hit location
-        Vector dir = direction.clone().normalize();
+        Vector dir = direction.clone();
         Location rotation = center.clone();
         rotation.setDirection(dir);
         displayTracer.setRotation(rotation.getYaw(), rotation.getPitch());
