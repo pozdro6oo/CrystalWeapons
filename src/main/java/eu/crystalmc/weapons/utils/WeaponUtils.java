@@ -41,7 +41,7 @@ public class WeaponUtils {
 
 
     public static String getFireAnimationModel(Weapon weapon) {
-        return "crystalmc:weapon/" + weapon.getId() + "_fire";
+        return "crystalmc:fired_weapon/" + weapon.getId();
     }
 
     public static String getModel(Weapon weapon) {

@@ -40,11 +40,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-public class ResourcepackBuilder {
+public class ResourcepackCreator {
     private final CrystalWeapons plugin;
     private final Config.Data config;
 
-    public ResourcepackBuilder(CrystalWeapons plugin) {
+    public ResourcepackCreator(CrystalWeapons plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfiguration();
     }
@@ -383,7 +383,7 @@ public class ResourcepackBuilder {
 
 
     private void createWeaponItem(String name, WeaponConfig weaponConfig) {
-        File modelFireFile = getCrystalmcFolder().resolve("items").resolve("weapon").resolve(name + "_fire.json").toFile();
+        File modelFireFile = getCrystalmcFolder().resolve("items").resolve("fired_weapon").resolve(name + ".json").toFile();
 
         JsonConfig<Item> modelFire = new JsonConfig<>(modelFireFile, Item.class);
 

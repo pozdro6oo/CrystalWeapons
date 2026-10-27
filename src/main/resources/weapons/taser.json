@@ -2,7 +2,7 @@
   "item": {
     "display_name": "Taser",
     "model": "default",
-    "gun_fire_animation_model": "taser"
+    "fired_model": "taser"
   },
   "sounds": {
     "shoot": "taser.shoot",
@@ -22,5 +22,5 @@
   "max_distance": 1.7,
   "bullets_per_shot": 1,
   "infinite_ammunition": true,
-  "type": "rifle"
+  "type": "none"
 }

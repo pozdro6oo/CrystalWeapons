@@ -2,7 +2,7 @@
   "item": {
     "display_name": "SG-553",
     "model": "default",
-    "gun_fire_animation_model": "default"
+    "fired_model": "default"
   },
   "sounds": {
     "shoot": "sg553.shoot",

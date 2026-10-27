@@ -8,7 +8,7 @@ import eu.crystalmc.weapons.listener.DisableItemCrafting;
 import eu.crystalmc.weapons.listener.SynchronizeDataWithConfiguration;
 import eu.crystalmc.weapons.listener.modifier.AddDamageModifier;
 import eu.crystalmc.weapons.listener.modifier.ApplyFireModifier;
-import eu.crystalmc.weapons.resourcepack.ResourcepackBuilder;
+import eu.crystalmc.weapons.resourcepack.ResourcepackCreator;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -72,7 +72,7 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
         //  build and pack resourcepack
-        ResourcepackBuilder builder = new ResourcepackBuilder(this);
+        ResourcepackCreator builder = new ResourcepackCreator(this);
         builder.init();
     }
 
@@ -173,6 +173,7 @@ public final class CrystalWeapons extends JavaPlugin {
     private void setupDefaultConfiguration() {
         if (this.isSetup()) {
             this.saveResource("assets/models/weapon/default.json", false);
+            this.saveResource("assets/models/weapon_item/default.json", false);
             this.saveResource("assets/models/ammunition_type/default.json", false);
 
             setupDefaultFireAnimations("default");

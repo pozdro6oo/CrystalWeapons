@@ -43,6 +43,7 @@ public class WeaponConfig {
     @SerializedName("infinite_ammunition")
     private boolean infiniteAmmunition = false;
 
+    @SerializedName("type")
     private String type = "rifle";
 
     // for gson to work
@@ -112,7 +113,7 @@ public class WeaponConfig {
     }
 
 
-    public String getGunFireAnimationModel() {return item.gunFireAnimationModel;}
+    public String getGunFireAnimationModel() {return item.firedModel;}
 
     public String getModel() {
         return item.model;
@@ -142,8 +143,11 @@ public class WeaponConfig {
         @SerializedName("model")
         private String model = "default";
 
-        @SerializedName("gun_fire_animation_model")
-        private String gunFireAnimationModel = "default";
+        @SerializedName("item-model")
+        private String itemModel = "default";
+
+        @SerializedName("fired_model")
+        private String firedModel = "default";
     }
 
     public static class Visual {

@@ -2,7 +2,7 @@
   "item": {
     "display_name": "AWP",
     "model": "default",
-    "gun_fire_animation_model": "default"
+    "fired_model": "default"
   },
   "sounds": {
     "shoot": "awp.shoot",
