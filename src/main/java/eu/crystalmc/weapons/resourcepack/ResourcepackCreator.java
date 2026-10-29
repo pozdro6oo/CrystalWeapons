@@ -205,6 +205,7 @@ public class ResourcepackCreator {
         ItemStack item = createWeaponItemStack(name, config);
 
         createModel(name, "weapon", config.getIdleModel());
+        createModel(name, "weapon_idle", config.getIdleModel());
 
         File weaponItemFile = getCrystalmcFolder().resolve("models").resolve("item_weapon").resolve(name + ".json").toFile();
         createModel(weaponItemFile, "weapon/" + name, config.getItemModel());
@@ -246,8 +247,9 @@ public class ResourcepackCreator {
         }
 
         compound.setInteger(Weapon.Key.AMMUNITION.key, ammunition);
-        compound.setBoolean(Synchronizable.SYNCHRONIZE_DATA, true);
-        compound.setString(Synchronizable.RUNTIME, CrystalWeapons.RUNTIME);
+
+        setSynchronizable(compound);
+
         compound.setString(Weapon.Key.ID.key, name);
 
         NBT.modify(item, nbt -> {
@@ -294,9 +296,7 @@ public class ResourcepackCreator {
 
         compound.setString(AmmunitionTypeConfig.Key.ID.key, name);
 
-        compound.setBoolean(Synchronizable.SYNCHRONIZE_DATA, true);
-        compound.setString(Synchronizable.RUNTIME, CrystalWeapons.RUNTIME);
-        compound.setString(Weapon.Key.ID.key, name);
+        setSynchronizable(compound);
 
         NBT.modify(item, nbt -> {
             nbt.getOrCreateCompound(CrystalWeapons.AMMUNITION_COMPOUND).mergeCompound(compound);
@@ -321,6 +321,11 @@ public class ResourcepackCreator {
         item.setItemMeta(meta);
 
         return item;
+    }
+
+    private void setSynchronizable(ReadWriteNBT compound) {
+        compound.setBoolean(Synchronizable.SYNCHRONIZE_DATA, true);
+        compound.setString(Synchronizable.RUNTIME, CrystalWeapons.RUNTIME);
     }
 
 

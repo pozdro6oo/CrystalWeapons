@@ -16,14 +16,15 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class WeaponUtils {
@@ -40,9 +41,34 @@ public class WeaponUtils {
     }
 
 
+    public enum WeaponModel {
+        DEFAULT,
+        IDLE,
+        @Deprecated ITEM
+    }
 
+    public static void setModel(ItemStack itemStack, WeaponModel model, Weapon weapon) {
+//        :))))
+//        Bukkit.getPlayer("pozdro6oo").sendMessage(ThreadLocalRandom.current().nextInt(100, 999) + " : " + model);
+        ItemMeta meta = itemStack.getItemMeta();
 
-    public static NamespacedKey getModel(Weapon weapon) {
+        NamespacedKey key;
+        if (model == WeaponModel.IDLE) {
+            key = getIdleModel(weapon);
+        } else if (model == WeaponModel.DEFAULT) {
+            key = getDefaultModel(weapon);
+        } else {
+            key = null;
+        }
+
+        if (meta != null) {
+            meta.setItemModel(key);
+            itemStack.setItemMeta(meta);
+        }
+
+    }
+
+    public static NamespacedKey getDefaultModel(Weapon weapon) {
         return NamespacedKey.fromString("crystalmc:weapon/" + weapon.getId());
     }
 
@@ -66,6 +92,7 @@ public class WeaponUtils {
         }
         return text;
     }
+
     public static String getAmmunitionText(Weapon weapon) {
         return "Ammunition: " + weapon.getAmmunition() + "/" + weapon.getMagazineSize();
     }

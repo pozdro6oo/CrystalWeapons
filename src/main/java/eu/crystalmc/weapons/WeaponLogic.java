@@ -20,7 +20,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -112,10 +111,10 @@ class WeaponLogic implements Listener {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        if (config.weapons.visual.enableFireAnimation) {
-            ItemMeta meta = item.getItemMeta();
-            meta.setItemModel(WeaponUtils.getModel(weapon));
-            item.setItemMeta(meta);
+        if (config.weapons.visual.enableFireAnimation && weapon.getAmmunition() > 0) {
+            WeaponUtils.setModel(item, WeaponUtils.WeaponModel.DEFAULT, weapon);
+        } else {
+            WeaponUtils.setModel(item, WeaponUtils.WeaponModel.IDLE, weapon);
         }
 
         new BukkitRunnable() {
@@ -151,10 +150,6 @@ class WeaponLogic implements Listener {
                 }
 
                 if (timer == 0) {
-                    if (!weapon.isInfiniteAmmunition()) {
-                        weapon.setAmmunition(weapon.getAmmunition() - 1);
-                    }
-                    displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
                     shoot(player, weapon, item);
 
                     if (!weapon.isAutomatic()) {
@@ -181,20 +176,23 @@ class WeaponLogic implements Listener {
 
     private void updateAmmunition(ItemStack item, Weapon weapon) {
         if (item.getType() == Material.AIR) return;
+        int ammunition = weapon.getAmmunition();
+
+        if (ammunition == 0) {
+            WeaponUtils.setModel(item, WeaponUtils.WeaponModel.IDLE, weapon);
+        }
 
         NBT.modify(item, nbt -> {
             ReadWriteNBT compound = WeaponUtils.getNBT(nbt);
-            int ammunition = weapon.getAmmunition();
             if (compound != null) {
                 compound.setInteger(Weapon.Key.AMMUNITION.key, ammunition);
                 if (ammunition == 0) {
                     compound.removeKey(AmmunitionTypeConfig.Key.MODIFIERS.key);
-                    @todo
-                    nbt.setString("minecraft:item_model", WeaponUtils.getIdleModel(weapon).toString());
                 }
             }
         });
     }
+
     private void reload(Player player, Weapon weapon, ItemStack item) {
         PlayerReloadWeaponEvent event = new PlayerReloadWeaponEvent(player, weapon, item);
         event.callEvent();
@@ -271,9 +269,11 @@ class WeaponLogic implements Listener {
             compound.removeKey(key);
             NBT.get(ammunitionItem, nbt2 -> {
                 ReadableNBT compound2 = nbt2.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
-                ReadableNBT ammunitionModifiers = compound2.getCompound(key);
-                if (ammunitionModifiers != null) {
-                    compound.getOrCreateCompound(key).mergeCompound(ammunitionModifiers);
+                if (compound2 != null) {
+                    ReadableNBT ammunitionModifiers = compound2.getCompound(key);
+                    if (ammunitionModifiers != null) {
+                        compound.getOrCreateCompound(key).mergeCompound(ammunitionModifiers);
+                    }
                 }
 
             });
@@ -289,7 +289,11 @@ class WeaponLogic implements Listener {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        NamespacedKey idleModel = WeaponUtils.getIdleModel(weapon);
+        if (!weapon.isInfiniteAmmunition()) {
+            weapon.setAmmunition(weapon.getAmmunition() - 1);
+        }
+        displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
+
 
         if (shouldBeRefreshed(player, item, weapon, config)) {
             updateAmmunition(item, weapon);
@@ -306,13 +310,10 @@ class WeaponLogic implements Listener {
                         this.cancel();
                         return;
                     }
-                    ItemMeta currentMeta = item.getItemMeta();
 
-                    if (currentMeta != null) {
-                        currentMeta.setItemModel(idleModel);
+                    WeaponUtils.setModel(item, WeaponUtils.WeaponModel.IDLE, weapon);
 
-                        item.setItemMeta(WeaponUtils.updateLore(currentMeta, weapon));
-                    }
+
                 }
             }.runTaskLater(plugin, 3L);
         } else {
@@ -325,15 +326,15 @@ class WeaponLogic implements Listener {
 
         playShootSound(player, weapon, config);
 
-        applyDamage(player, weapon, item);
+        createBullet(player, weapon, item);
 
         if (weapon.getRecoil() > 0) recoil(player, weapon);
 
     }
 
 
-    private void applyDamage(Player player, Weapon weapon, ItemStack item) {
-        Map<LivingEntity, Double> damageMap = new HashMap<>();
+    private void createBullet(Player player, Weapon weapon, ItemStack item) {
+        Map<Damageable, Double> damageMap = new HashMap<>();
 
 
 
@@ -342,9 +343,11 @@ class WeaponLogic implements Listener {
         for (int i = 0; i < weapon.getBulletsPerShot(); i++) {
             HitResult hit = getHitLocation(player, weapon, playerPov);
 
+
             if (config.weapons.visual.enableBulletTracers) createBulletTracer(player, hit, weapon);
 
-            if (config.weapons.visual.bulletHitDecal.enable && weapon.isSpawnBulletHitDecal()) createBulletHitDecal(player, hit, weapon);
+            if (config.weapons.visual.bulletHitDecal.enable && weapon.isSpawnBulletHitDecal()) {
+                createBulletHitDecal(player, hit); }
 
             Vector direction = hit.location().toVector().subtract(playerPov.toVector());
 
@@ -356,16 +359,20 @@ class WeaponLogic implements Listener {
                     distance,
                     config.weapons.gameplay.bulletHitboxSize,
                     entity -> entity != player && entity instanceof Damageable
+
             );
 
-            if (result != null && result.getHitEntity() instanceof LivingEntity entity) {
+
+            if (result != null) {
+                Damageable entity = (Damageable) result.getHitEntity();
+
                 damageMap.put(entity, damageMap.getOrDefault(entity, 0.0) + weapon.getDamage());
             }
         }
         // ----------------------------------------------------------------------------------------------------------
 
-        for (Map.Entry<LivingEntity, Double> entry : damageMap.entrySet()) {
-            LivingEntity entity = entry.getKey();
+        for (Map.Entry<Damageable, Double> entry : damageMap.entrySet()) {
+            org.bukkit.entity.Damageable entity = entry.getKey();
             Double damage = entry.getValue();
 
             EntityHitByWeaponEvent event = new EntityHitByWeaponEvent(entity, weapon, item, player, damage);
@@ -373,7 +380,10 @@ class WeaponLogic implements Listener {
             if (event.isCancelled()) return;
 
             entity.damage(event.getDamage(), player);
-            entry.getKey().setNoDamageTicks(0);
+
+            if (entity instanceof LivingEntity) {
+                ((LivingEntity) entity).setNoDamageTicks(0);
+            }
 
         }
     }
@@ -427,7 +437,7 @@ class WeaponLogic implements Listener {
                 playerPov,
                 direction,
                 distance,
-                FluidCollisionMode.ALWAYS,
+                FluidCollisionMode.NEVER,
                 true
         );
 
@@ -450,14 +460,18 @@ class WeaponLogic implements Listener {
         player.setRotation(yaw, pitch);
     }
 
+
+
+
+
     private void createBulletTracer(Player player, HitResult hit, Weapon weapon) {
-        Vector direction = player.getEyeLocation().getDirection();
+        Location eyeLocation = player.getEyeLocation().clone();
 
-        // Fix visual eye location
-        Location start = player.getEyeLocation();
+        Location start = eyeLocation.add(eyeLocation.getDirection().multiply(0.1));
+        Location hitLocation = hit.location().clone();
 
-        // Calculate length
-        Location hitLocation = hit.location();
+        Vector direction = start.toVector().subtract(hitLocation.toVector()).normalize();
+
         double length = start.distance(hitLocation);
         Location center = start.add(
                 hitLocation.subtract(start).multiply(0.5)
@@ -487,7 +501,7 @@ class WeaponLogic implements Listener {
         displayTracer.setTransformation(new Transformation(
                 new Vector3f(),
                 new AxisAngle4f(),
-                new Vector3f(0.004f, 0.004f, (float) length),
+                new Vector3f(0.0021f, 0.0021f, (float) length),
                 new AxisAngle4f()
         ));
 
@@ -499,10 +513,7 @@ class WeaponLogic implements Listener {
         }.runTaskLater(plugin, 2L);
     }
 
-
-
-
-    private void createBulletHitDecal(Player player, HitResult hit, Weapon weapon) {
+    private void createBulletHitDecal(Player player, HitResult hit) {
         Vector direction = player.getEyeLocation().clone().getDirection().multiply(0.25);
 
         Location hitLocation = hit.location();

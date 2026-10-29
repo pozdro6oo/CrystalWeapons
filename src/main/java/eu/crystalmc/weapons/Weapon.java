@@ -13,6 +13,7 @@ public class Weapon extends WeaponConfig {
 
         public final String key = this.toString().toLowerCase();
 
+
     }
 
     @SerializedName("ammunition")

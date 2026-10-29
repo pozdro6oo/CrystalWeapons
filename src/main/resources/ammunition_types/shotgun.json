@@ -1,0 +1,8 @@
+{
+  "display_name": "Shotgun Ammunition",
+  "model": "ammunition_type/default",
+  "priority": 3,
+  "supported_weapon_types": [
+    "shotgun"
+  ]
+}
