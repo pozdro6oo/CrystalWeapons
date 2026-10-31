@@ -179,7 +179,7 @@ public final class CrystalWeapons extends JavaPlugin {
 
             setupDefaultFireAnimations("default");
             setupDefaultFireAnimations("taser");
-            setupDefaultFireAnimations("laser");
+//            setupDefaultFireAnimations("laser");
 
             setupDefaultWeapon("ak47");
             setupDefaultWeapon("taser", false);
@@ -189,6 +189,8 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("m4a4");
             setupDefaultWeapon("m4a1-s");
             setupDefaultWeapon("sg553");
+
+            setupDefaultAmmunitionType("shotgun");
 
             setupDefaultAmmunitionType("rifle");
             setupDefaultAmmunitionType("heavy_rifle");
@@ -200,9 +202,11 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultAmmunitionType("heavy_sniper");
 
 
-
             this.saveResource("tutorial.txt", false);
             this.saveResource("assets/textures/bullet_hit.png", false);
+
+            sendInfo("Created default files");
+
         }
 
 

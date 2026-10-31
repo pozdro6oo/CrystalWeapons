@@ -7,7 +7,7 @@ import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import eu.crystalmc.weapons.*;
 import eu.crystalmc.weapons.config.*;
-import eu.crystalmc.weapons.config.resourcepack.FireAnimationTexture;
+import eu.crystalmc.weapons.config.resourcepack.AnimatedTexture;
 import eu.crystalmc.weapons.config.resourcepack.Item;
 import eu.crystalmc.weapons.config.resourcepack.Model;
 import eu.crystalmc.weapons.utils.*;
@@ -469,14 +469,18 @@ public class ResourcepackCreator {
 
 
     private void createFireAnimationTextures() {
-        Path folder = plugin.getDataPath().resolve("assets").resolve("textures").resolve("weapon_fire");
+        createAnimatedTextures("weapon_fire");
+    }
 
-        Path outputFolder = getCrystalmcFolder().resolve("textures").resolve("item").resolve("weapon_fire");
+    private void createAnimatedTextures(String directory) {
+        Path folder = plugin.getDataPath().resolve("assets").resolve("textures").resolve(directory);
+
+        Path outputFolder = getCrystalmcFolder().resolve("textures").resolve("item").resolve(directory);
 
         File[] files = folder.toFile().listFiles((_, name) -> name.endsWith(".png"));
 
         if (files == null) {
-            plugin.sendWarning("No fire animations found");
+            plugin.sendWarning("Animation not found");
             return;
         }
 
@@ -484,7 +488,7 @@ public class ResourcepackCreator {
         for (File file : files) {
             textureFile = outputFolder.resolve(file.getName() + ".mcmeta").toFile();
 
-            JsonConfig<FireAnimationTexture> texture = new JsonConfig<>(textureFile, FireAnimationTexture.class);
+            JsonConfig<AnimatedTexture> texture = new JsonConfig<>(textureFile, AnimatedTexture.class);
             texture.save();
         }
 

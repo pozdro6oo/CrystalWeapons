@@ -34,7 +34,9 @@ import org.bukkit.util.Transformation;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 class WeaponLogic implements Listener {
@@ -347,7 +349,7 @@ class WeaponLogic implements Listener {
             if (config.weapons.visual.enableBulletTracers) createBulletTracer(player, hit, weapon);
 
             if (config.weapons.visual.bulletHitDecal.enable && weapon.isSpawnBulletHitDecal()) {
-                createBulletHitDecal(player, hit); }
+                createBulletHitDecal(hit); }
 
             Vector direction = hit.location().toVector().subtract(playerPov.toVector());
 
@@ -467,7 +469,13 @@ class WeaponLogic implements Listener {
     private void createBulletTracer(Player player, HitResult hit, Weapon weapon) {
         Location eyeLocation = player.getEyeLocation().clone();
 
-        Location start = eyeLocation.add(eyeLocation.getDirection().multiply(0.1));
+        Vector rightOffset = eyeLocation.getDirection();
+        rightOffset = new Vector(-rightOffset.getZ(), 0, rightOffset.getX()).normalize();
+
+
+
+        Location start = eyeLocation.add(rightOffset.multiply(0.12));
+
         Location hitLocation = hit.location().clone();
 
         Vector direction = start.toVector().subtract(hitLocation.toVector()).normalize();
@@ -513,13 +521,14 @@ class WeaponLogic implements Listener {
         }.runTaskLater(plugin, 2L);
     }
 
-    private void createBulletHitDecal(Player player, HitResult hit) {
-        Vector direction = player.getEyeLocation().clone().getDirection().multiply(0.25);
+    private void createBulletHitDecal(HitResult hit) {
+
+        BlockFace blockFace = hit.blockFace();
+
+        if (blockFace == null) return;
 
         Location hitLocation = hit.location();
-        BlockFace blockFace = hit.blockFace();
-        Location start = player.getEyeLocation().add(direction);
-        start.setY(start.getY() - 0.05);
+        AxisAngle4f rotation = getAxisAngle4f(blockFace);
 
         Block hitBlock = hitLocation.getBlock();
 
@@ -534,19 +543,31 @@ class WeaponLogic implements Listener {
             }
         }
 
-        AxisAngle4f rotation = getAxisAngle4f(blockFace);
 
+        Vector direction = blockFace.getDirection().normalize();
 
-        ItemDisplay displayHit = start.getWorld().spawn(hitLocation, ItemDisplay.class);
+        // spawn particles
+        hitLocation.getWorld().spawnParticle(Particle.BLOCK, hitLocation.clone().add(direction.clone().multiply(0.06)), 2, 0.1, 0.02, 0.1, hitBlock.getBlockData());
+
+        // this should fix flickering
+        // actually now spawnLocation but ok
+        Random rand = new Random();
+
+        double offset = rand.nextDouble(0.09, 1)/10000.0;
+
+        hitLocation = hitLocation.clone().add(direction.clone().multiply(offset));
+
+        ItemDisplay displayHit = hitLocation.getWorld().spawn(hitLocation, ItemDisplay.class);
 
         displayHit.setItemStack(BulletHitDecalsManager.texture);
         displayHit.setBillboard(Display.Billboard.FIXED);
 
+        float randomRotation = rand.nextInt(4) * 90f;
         displayHit.setTransformation(new Transformation(
                 new Vector3f(),
                 rotation,
                 new Vector3f(0.2F),
-                new AxisAngle4f()
+                new AxisAngle4f((float) Math.toRadians(randomRotation),0f, 0f, 1f)
         ));
 
         BulletHitDecalsManager.start(displayHit, hitBlock, plugin, plugin.getConfiguration());

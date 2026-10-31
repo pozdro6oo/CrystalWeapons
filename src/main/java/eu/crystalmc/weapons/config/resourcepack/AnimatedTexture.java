@@ -4,12 +4,12 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class FireAnimationTexture {
+public class AnimatedTexture {
 
     @SerializedName("animation")
     public Animation model = new Animation();
 
-    public FireAnimationTexture() { }
+    public AnimatedTexture() { }
 
     public static class Animation {
         public Animation() {}

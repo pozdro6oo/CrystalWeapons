@@ -122,7 +122,7 @@ public class WeaponCommand {
     private enum Property {
         infinite_ammunition(BoolArgumentType.bool(), Boolean.class),
         automatic(BoolArgumentType.bool(), Boolean.class),
-        synchronize_weapon_data(BoolArgumentType.bool(), Boolean.class),
+        synchronize_data(BoolArgumentType.bool(), Boolean.class),
         magazine_size(IntegerArgumentType.integer(1), int.class),
         max_distance(DoubleArgumentType.doubleArg(0), double.class),
         shot_delay(IntegerArgumentType.integer(1),int.class),
