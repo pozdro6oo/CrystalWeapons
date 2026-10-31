@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public class AddDamageModifier implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPrepareCraft(EntityHitByWeaponEvent event) {
-        @Nullable AmmunitionTypeConfig.Modifiers modifiers = event.getWeapon().getModifiers();
+        AmmunitionTypeConfig.Modifiers modifiers = event.getWeapon().getModifiers();
         if (modifiers == null) return;
 
         AmmunitionTypeConfig.AddDamage modifier = modifiers.addDamage;
