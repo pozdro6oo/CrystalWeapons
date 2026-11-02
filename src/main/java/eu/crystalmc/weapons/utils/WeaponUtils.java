@@ -17,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -101,23 +102,17 @@ public class WeaponUtils {
     static public int getAmmunitionAmount(Player player, Weapon weapon) {
         int count = 0;
 
-        boolean contains;
-        for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
-            if (player.getInventory().containsAtLeast(ammunition, 1)) {
-                contains = NBT.get(ammunition, nbt -> {
-                            ReadableNBT compound = nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
-                            if (compound == null) return false;
-                            return (boolean) compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key).contains(weapon.getId());
-                        }
-                );
-                if (contains) {
-                    for (ItemStack item : player.getInventory().getContents()) {
-                        if (item != null) {
-                            if (item.isSimilar(ammunition)) {
-                                count += item.getAmount();
-                            }
-                        }
-                    }
+        boolean isAmmunition;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() != Material.AIR) {
+                isAmmunition = NBT.get(item, nbt -> {
+                    ReadableNBT compound = nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
+                    if (compound == null) return false;
+                    player.sendMessage(compound.toString());
+                    return compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key).contains(weapon.getId());
+                });
+                if (isAmmunition) {
+                    count += item.getAmount();
                 }
             }
 
