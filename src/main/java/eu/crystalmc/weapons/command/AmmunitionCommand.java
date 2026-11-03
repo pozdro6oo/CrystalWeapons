@@ -25,9 +25,9 @@ public class AmmunitionCommand {
         Config.Data config = plugin.getConfiguration();
 
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("ammunition")
-                .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.command))
+                .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.command))
                 .then(Commands.literal("give")
-                        .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.give))
+                        .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.give))
                         .then(Commands.argument("entities", ArgumentTypes.entities())
                                 .then(Commands.argument("ammunition-type", StringArgumentType.word())
                                         .suggests( (_, builder) -> suggestAmmunitionType(builder))

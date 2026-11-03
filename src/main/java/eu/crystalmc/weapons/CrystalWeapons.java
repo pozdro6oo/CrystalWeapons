@@ -9,16 +9,23 @@ import eu.crystalmc.weapons.listener.SynchronizeDataWithConfiguration;
 import eu.crystalmc.weapons.listener.modifier.AddDamageModifier;
 import eu.crystalmc.weapons.listener.modifier.ApplyFireModifier;
 import eu.crystalmc.weapons.resourcepack.ResourcepackCreator;
+import eu.crystalmc.weapons.weapon.WeaponEffects;
+import eu.crystalmc.weapons.weapon.WeaponListener;
+import eu.crystalmc.weapons.weapon.WeaponLogic;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,7 +53,10 @@ public final class CrystalWeapons extends JavaPlugin {
 
         //  register event listener
         //  this one does not need any priority
-        Bukkit.getPluginManager().registerEvents(new WeaponLogic(this), this);
+        WeaponEffects weaponEffects = new WeaponEffects(this);
+        WeaponLogic weaponLogic = new WeaponLogic(this, weaponEffects);
+
+        Bukkit.getPluginManager().registerEvents(new WeaponListener(this, weaponLogic, weaponEffects), this);
         Bukkit.getPluginManager().registerEvents(new DisableItemCrafting(), this);
 
         registerModifiers();
@@ -82,7 +92,7 @@ public final class CrystalWeapons extends JavaPlugin {
         Bukkit.getScheduler().cancelTasks(this);
     }
 
-    public boolean hasPermission(CommandSender player, String permission) {
+    public boolean playerRequiresPermission(CommandSender player, String permission) {
         return (player.hasPermission(permission) || permission.equals("default"));
     }
 
@@ -114,7 +124,23 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
 
+    public static void sendDebug(String message) {
+        long seed = message.hashCode();
 
+        NamedTextColor[] colors = Set.of(NamedTextColor.RED, NamedTextColor.LIGHT_PURPLE, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.AQUA, NamedTextColor.GOLD, NamedTextColor.BLUE, NamedTextColor.WHITE)
+                .toArray(new NamedTextColor[0]);
+
+        Random random = new Random(seed);
+        NamedTextColor color = colors[random.nextInt(colors.length)];
+
+        Component text = Component.text(" " + message).color(color);
+
+        Component date = Component.text("["+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss:SS"))+"]").color(NamedTextColor.GRAY);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage(date.append(text));
+        }
+        Bukkit.getConsoleSender().sendMessage(text);
+    }
 
 
     public void sendWarning(String message) {

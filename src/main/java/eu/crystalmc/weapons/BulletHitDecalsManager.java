@@ -16,20 +16,14 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-class BulletHitDecalsManager {
+public class BulletHitDecalsManager {
 
     private static final Deque<ItemDisplay> decals = new ArrayDeque<>();
 
     final public static ItemStack texture = createBulletHitTexture();
 
 
-    public static void start(ItemDisplay displayHit, Block hitBlock, JavaPlugin plugin, Config.Data data) {
-        int limit = data.weapons.visual.bulletHitDecal.limit;
-
-//        NBT.modify(displayHit, nbt -> {
-//            nbt.setBoolean("is_bullet_hit_decal", true);
-//        });
-
+    public static void start(ItemDisplay displayHit, Block hitBlock, JavaPlugin plugin, int limit, int disappearAfterSeconds) {
         if (limit <= 0) {
             displayHit.remove();
             return;
@@ -46,7 +40,7 @@ class BulletHitDecalsManager {
         decals.addLast(displayHit);
 
         final int[] timer = {0};
-        int disappearAfter = data.weapons.visual.bulletHitDecal.disappearAfter*20;
+        int disappearAfter = disappearAfterSeconds*20;
 
         new BukkitRunnable() {
             @Override

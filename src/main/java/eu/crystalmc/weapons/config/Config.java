@@ -272,7 +272,16 @@ public class Config {
 
 
 
+        public Weapons.Gameplay.LimitDistanceForAllWeapons getDistanceLimit() {
+            return this.weapons.gameplay.limitDistanceForAllWeapons;
+        }
 
+        public int getBulletHitDecalDisappear() {
+            return this.weapons.visual.bulletHitDecal.disappearAfter;
+        }
+        public int getBulletHitDecalLimit() {
+            return this.weapons.visual.bulletHitDecal.limit;
+        }
 
 
         private <E extends Enum<E>> E getEnum(Class<E> enumClass, String value, E defaultValue, Consumer<String> setter) {

@@ -45,5 +45,10 @@ public class Weapon extends WeaponConfig {
     }
 
 
+    public enum WeaponModel {
+        DEFAULT,
+        IDLE,
+        @Deprecated ITEM
+    }
 
 }

@@ -3,6 +3,7 @@ package eu.crystalmc.weapons.utils;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import de.tr7zw.nbtapi.iface.ReadableNBT;
+import de.tr7zw.nbtapi.iface.ReadableNBTList;
 import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.config.Synchronizable;
@@ -16,7 +17,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -25,7 +25,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 
 public class WeaponUtils {
@@ -42,21 +41,14 @@ public class WeaponUtils {
     }
 
 
-    public enum WeaponModel {
-        DEFAULT,
-        IDLE,
-        @Deprecated ITEM
-    }
 
-    public static void setModel(ItemStack itemStack, WeaponModel model, Weapon weapon) {
-//        :))))
-//        Bukkit.getPlayer("pozdro6oo").sendMessage(ThreadLocalRandom.current().nextInt(100, 999) + " : " + model);
+    public static void setModel(ItemStack itemStack, Weapon.WeaponModel model, Weapon weapon) {
         ItemMeta meta = itemStack.getItemMeta();
 
         NamespacedKey key;
-        if (model == WeaponModel.IDLE) {
+        if (model == Weapon.WeaponModel.IDLE) {
             key = getIdleModel(weapon);
-        } else if (model == WeaponModel.DEFAULT) {
+        } else if (model == Weapon.WeaponModel.DEFAULT) {
             key = getDefaultModel(weapon);
         } else {
             key = null;
@@ -102,16 +94,9 @@ public class WeaponUtils {
     static public int getAmmunitionAmount(Player player, Weapon weapon) {
         int count = 0;
 
-        boolean isAmmunition;
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null && item.getType() != Material.AIR) {
-                isAmmunition = NBT.get(item, nbt -> {
-                    ReadableNBT compound = nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
-                    if (compound == null) return false;
-                    player.sendMessage(compound.toString());
-                    return compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key).contains(weapon.getId());
-                });
-                if (isAmmunition) {
+                if (isAmmunitionSupportsWeapon(item, weapon)) {
                     count += item.getAmount();
                 }
             }
@@ -120,6 +105,19 @@ public class WeaponUtils {
 
         return count;
     }
+
+    private static boolean isAmmunitionSupportsWeapon(ItemStack itemStack, Weapon weapon) {
+        if (itemStack == null) return false;
+        if (itemStack.getType() == Material.AIR) return false;
+
+        return NBT.get(itemStack, nbt -> {
+            ReadableNBT compound = nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
+            if (compound == null) return false;
+            ReadableNBTList<String> list = compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key);
+            return list.contains(weapon.getType()) || list.contains(weapon.getId());
+        });
+    }
+
 
     public static boolean isWeapon(ItemStack itemStack) {
         return NBT.get(itemStack, nbt -> (boolean) nbt.hasTag(CrystalWeapons.WEAPON_COMPOUND));
@@ -134,17 +132,13 @@ public class WeaponUtils {
     }
 
 
-    static public String getAmmunitionType(Player player, Weapon weapon) {
+    static public String getAvailableAmmunitionType(Player player, Weapon weapon) {
         for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
             if (player.getInventory().containsAtLeast(ammunition, 1)) {
-                boolean contains = NBT.get(ammunition, nbt ->
-                        (boolean) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key).contains(weapon.getType())
-                );
-                String id = NBT.get(ammunition, nbt ->
-                        (String) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getString(AmmunitionTypeConfig.Key.ID.key)
-                );
+                boolean contains = isAmmunitionSupportsWeapon(ammunition, weapon);
+
                 if (contains) {
-                    return id;
+                    return NBT.get(ammunition, nbt -> (String) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getString(AmmunitionTypeConfig.Key.ID.key));
                 }
             }
 
@@ -178,6 +172,8 @@ public class WeaponUtils {
 
 
     public static void updateLore(ItemStack item, Weapon weapon) {
+        CrystalWeapons.sendDebug("      called updateLore");
+
         ItemMeta meta = updateLore(item.getItemMeta(), weapon);
         if (meta == null) return;
         item.setItemMeta(meta);

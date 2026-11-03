@@ -36,9 +36,9 @@ public class WeaponCommand {
     public LiteralCommandNode<CommandSourceStack> getCommand(CrystalWeapons plugin) {
         Config.Data config = plugin.getConfiguration();
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("weapon")
-            .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.command))
+            .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.command))
             .then(Commands.literal("give")
-                    .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.give))
+                    .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.give))
                     .then(Commands.argument("entities", ArgumentTypes.entities())
                         .then(Commands.argument("weapon", StringArgumentType.word())
                                 .suggests( (_, builder) -> suggestWeapons(builder))
@@ -50,7 +50,7 @@ public class WeaponCommand {
             )
             .then(getModifyArgument(plugin, config))
             .then(Commands.literal("save")
-                    .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.save))
+                    .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.save))
                     .then(Commands.argument("weapon", StringArgumentType.word())
                             .suggests( (_, builder) -> suggestWeapons(builder))
                             .executes(context -> {
@@ -102,7 +102,7 @@ public class WeaponCommand {
 
     private LiteralArgumentBuilder<CommandSourceStack> getModifyArgument(CrystalWeapons plugin, Config.Data config) {
         LiteralArgumentBuilder<CommandSourceStack> argument = Commands.literal("modify")
-                .requires(source -> plugin.hasPermission(source.getSender(), config.permissions.modify));
+                .requires(source -> plugin.playerRequiresPermission(source.getSender(), config.permissions.modify));
 
         for (Property propery : Property.values()) {
             argument.then(propery.getArgument());
