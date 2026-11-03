@@ -125,6 +125,8 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
     public static void sendDebug(String message) {
+        if (true) return;
+
         long seed = message.hashCode();
 
         NamedTextColor[] colors = Set.of(NamedTextColor.RED, NamedTextColor.LIGHT_PURPLE, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.AQUA, NamedTextColor.GOLD, NamedTextColor.BLUE, NamedTextColor.WHITE)

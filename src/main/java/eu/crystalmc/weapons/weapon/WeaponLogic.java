@@ -536,7 +536,6 @@ public class WeaponLogic {
 
     private boolean shouldBeRefreshed(Player player, ItemStack item, Weapon weapon, Config.Data config) {
         boolean r = !(item.equals(player.getActiveItem()) && weapon.getShotDelay() <= config.weapons.visual.fireAnimationFix && weapon.isAutomatic() && weapon.getAmmunition() > 0);
-        CrystalWeapons.sendDebug("      called shouldBeRefreshed = " + r);
         return r;
     }
 
