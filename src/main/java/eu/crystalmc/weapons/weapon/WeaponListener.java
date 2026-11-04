@@ -2,6 +2,7 @@ package eu.crystalmc.weapons.weapon;
 
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.Weapon;
+import eu.crystalmc.weapons.utils.AmmunitionUtils;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -41,7 +42,7 @@ public class WeaponListener implements Listener {
         if (weapon == null) return;
 
 
-        weaponEffects.displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
+        weaponEffects.displayBullets(player, weapon, AmmunitionUtils.getAmmunitionAmount(player, weapon));
     }
 
 
@@ -50,12 +51,18 @@ public class WeaponListener implements Listener {
     public void onRightClick(PlayerInteractEvent event) {
         if (!plugin.playerRequiresPermission(event.getPlayer(), usePermission)) return;
 
+        if (event.getAction().isLeftClick()) return;
+
         ItemStack item = event.getPlayer().getEquipment().getItem(EquipmentSlot.HAND);
 
         if (item.getType() == Material.AIR) return;
 
+
+        if (weaponEffects.getCooldown(event.getPlayer(), item) > 0) return;
+
         Weapon weapon = WeaponUtils.getWeapon(item);
         if (weapon == null) return;
+
 
         weaponLogic.useWeapon(event.getPlayer(), item, weapon);
     }

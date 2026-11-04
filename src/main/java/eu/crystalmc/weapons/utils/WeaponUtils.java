@@ -43,6 +43,7 @@ public class WeaponUtils {
 
 
     public static void setModel(ItemStack itemStack, Weapon.WeaponModel model, Weapon weapon) {
+        CrystalWeapons.sendDebug("      setModel("+ model + ")");
         ItemMeta meta = itemStack.getItemMeta();
 
         NamespacedKey key;
@@ -91,34 +92,6 @@ public class WeaponUtils {
     }
 
 
-    static public int getAmmunitionAmount(Player player, Weapon weapon) {
-        int count = 0;
-
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.getType() != Material.AIR) {
-                if (isAmmunitionSupportsWeapon(item, weapon)) {
-                    count += item.getAmount();
-                }
-            }
-
-        }
-
-        return count;
-    }
-
-    private static boolean isAmmunitionSupportsWeapon(ItemStack itemStack, Weapon weapon) {
-        if (itemStack == null) return false;
-        if (itemStack.getType() == Material.AIR) return false;
-
-        return NBT.get(itemStack, nbt -> {
-            ReadableNBT compound = nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND);
-            if (compound == null) return false;
-            ReadableNBTList<String> list = compound.getStringList(AmmunitionTypeConfig.Key.SUPPORTED_WEAPON_TYPES.key);
-            return list.contains(weapon.getType()) || list.contains(weapon.getId());
-        });
-    }
-
-
     public static boolean isWeapon(ItemStack itemStack) {
         return NBT.get(itemStack, nbt -> (boolean) nbt.hasTag(CrystalWeapons.WEAPON_COMPOUND));
     }
@@ -132,47 +105,12 @@ public class WeaponUtils {
     }
 
 
-    static public String getAvailableAmmunitionType(Player player, Weapon weapon) {
-        for (ItemStack ammunition : AmmunitionTypesRegistry.getItems().values()) {
-            if (player.getInventory().containsAtLeast(ammunition, 1)) {
-                boolean contains = isAmmunitionSupportsWeapon(ammunition, weapon);
-
-                if (contains) {
-                    return NBT.get(ammunition, nbt -> (String) nbt.getCompound(CrystalWeapons.AMMUNITION_COMPOUND).getString(AmmunitionTypeConfig.Key.ID.key));
-                }
-            }
-
-        }
-        return null;
-    }
-
-
-    static public boolean removeAmmunitionType(Player player, String ammunitionType) {
-        ItemStack item = AmmunitionTypesRegistry.getAmmunitionType(ammunitionType);
-        if (item != null && ammunitionType != null) {
-            player.getInventory().removeItemAnySlot(item);
-            return true;
-        } else {
-            return false;
-        }
-
-
-    }
-    static public boolean hasAmmunitionType(Player player, String ammunitionType) {
-        ItemStack item = AmmunitionTypesRegistry.getAmmunitionType(ammunitionType);
-        if (item != null && ammunitionType != null) {
-            return player.getInventory().containsAtLeast(item, 1);
-        } else {
-            return false;
-        }
-    }
 
 
 
 
 
     public static void updateLore(ItemStack item, Weapon weapon) {
-        CrystalWeapons.sendDebug("      called updateLore");
 
         ItemMeta meta = updateLore(item.getItemMeta(), weapon);
         if (meta == null) return;

@@ -4,6 +4,7 @@ import eu.crystalmc.weapons.command.AmmunitionCommand;
 import eu.crystalmc.weapons.command.RemoveBulletHitDecalsCommand;
 import eu.crystalmc.weapons.command.WeaponCommand;
 import eu.crystalmc.weapons.config.Config;
+import eu.crystalmc.weapons.listener.CreativeWeaponDuplicateFix;
 import eu.crystalmc.weapons.listener.DisableItemCrafting;
 import eu.crystalmc.weapons.listener.SynchronizeDataWithConfiguration;
 import eu.crystalmc.weapons.listener.modifier.AddDamageModifier;
@@ -58,6 +59,7 @@ public final class CrystalWeapons extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new WeaponListener(this, weaponLogic, weaponEffects), this);
         Bukkit.getPluginManager().registerEvents(new DisableItemCrafting(), this);
+        Bukkit.getPluginManager().registerEvents(new CreativeWeaponDuplicateFix(), this);
 
         registerModifiers();
 
@@ -125,15 +127,9 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
     public static void sendDebug(String message) {
-        if (true) return;
+//        if (true) return;
 
-        long seed = message.hashCode();
-
-        NamedTextColor[] colors = Set.of(NamedTextColor.RED, NamedTextColor.LIGHT_PURPLE, NamedTextColor.GREEN, NamedTextColor.YELLOW, NamedTextColor.AQUA, NamedTextColor.GOLD, NamedTextColor.BLUE, NamedTextColor.WHITE)
-                .toArray(new NamedTextColor[0]);
-
-        Random random = new Random(seed);
-        NamedTextColor color = colors[random.nextInt(colors.length)];
+        NamedTextColor color = NamedTextColor.WHITE;
 
         Component text = Component.text(" " + message).color(color);
 

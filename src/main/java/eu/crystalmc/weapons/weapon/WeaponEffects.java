@@ -35,6 +35,8 @@ public class WeaponEffects {
     }
 
 
+
+
     public void setCooldown(Player player, ItemStack item, int cooldown) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
@@ -42,6 +44,16 @@ public class WeaponEffects {
         NamespacedKey group = meta.getUseCooldown().getCooldownGroup();
         if (group == null) return;
         player.setCooldown(group, cooldown);
+    }
+
+
+    public int getCooldown(Player player, ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return 0;
+
+        NamespacedKey group = meta.getUseCooldown().getCooldownGroup();
+        if (group == null) return 0;
+        return player.getCooldown(group);
     }
 
     public void playShootSound(Player player, Weapon weapon, Config.Data config) {

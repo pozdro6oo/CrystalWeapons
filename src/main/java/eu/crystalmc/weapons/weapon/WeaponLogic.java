@@ -13,12 +13,14 @@ import eu.crystalmc.weapons.api.event.player.PlayerShootWeaponEvent;
 import eu.crystalmc.weapons.api.event.player.PlayerUseWeaponEvent;
 import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
+import eu.crystalmc.weapons.utils.AmmunitionUtils;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
+import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -47,9 +49,9 @@ public class WeaponLogic {
     }
 
     void useWeapon(Player player, ItemStack item, Weapon weapon) {
-        PlayerUseWeaponEvent event = new PlayerUseWeaponEvent(player, weapon, item);
-        event.callEvent();
-        if (event.isCancelled()) return;
+        PlayerUseWeaponEvent e = new PlayerUseWeaponEvent(player, weapon, item);
+        e.callEvent();
+        if (e.isCancelled()) return;
 
         CrystalWeapons.sendDebug("called use ->");
 
@@ -65,30 +67,29 @@ public class WeaponLogic {
             @Override
             public void run() {
                 if (!player.isHandRaised() || !player.isOnline() || !item.equals(player.getActiveItem())) {
+                    refreshWeapon(item, weapon);
                     this.cancel();
                     return;
                 }
 
+                // reloading
                 if (weapon.getAmmunition() == 0) {
-                    if (config.isMagazineSystemEnabled()) {
-                        String ammunitionType = WeaponUtils.getAvailableAmmunitionType(player, weapon);
-                        if (!WeaponUtils.hasAmmunitionType(player, ammunitionType)) {
-                            player.clearActiveItem();
-                            weaponEffects.showHotbar(player, "No ammunition");
-                        } else {
-                            reload(player, weapon, item);
-                        }
-                    } else {
-                        reload(player, weapon, item);
-                    }
+                    reload(player, weapon, item);
                     this.cancel();
                     return;
+
+                // set ammunition to 0 if it's below 0
+                } else if (weapon.getAmmunition() < 0) {
+                    weapon.setAmmunition(0);
+                    updateAmmunition(item, weapon);
                 }
 
+                // restart timer
                 if (timer == weapon.getShotDelay()) {
                     timer = 0;
                 }
 
+                // shooting
                 if (timer == 0) {
                     shoot(player, weapon, item);
 
@@ -112,9 +113,25 @@ public class WeaponLogic {
         CrystalWeapons.sendDebug("  called reload ->");
 
 
-        weaponEffects.setCooldown(player, item, weapon.getReloadTime());
+
+
+
+        if (config.isMagazineSystemEnabled()) {
+            String ammunitionType = AmmunitionUtils.getAvailableAmmunitionType(player, weapon);
+            if (!AmmunitionUtils.hasAmmunitionType(player, ammunitionType)) {
+                weaponEffects.showHotbar(player, "No ammunition");
+                return;
+            }
+        }
+
+
+        weaponEffects.setCooldown(player, item, weapon.getReloadTime() + 1);
 
         Sound sound = weaponEffects.playSound(player, "crystalmc:weapon." + weapon.getReloadSound(), config.weapons.sound.volume,1.0F);
+
+        weaponEffects.showHotbar(player, "Reloading...");
+
+        player.clearActiveItem();
 
         new BukkitRunnable() {
             private int timer = 0;
@@ -122,9 +139,6 @@ public class WeaponLogic {
 
             @Override
             public void run() {
-                weaponEffects.showHotbar(player, "Reloading...");
-
-                player.clearActiveItem();
 
                 // Cancelled.
                 if (!item.equals(player.getEquipment().getItem(equipmentSlot))) {
@@ -137,21 +151,19 @@ public class WeaponLogic {
 
                 //  Success.
                 if (timer == weapon.getReloadTime()) {
-                    player.setActiveItemRemainingTime(0);
-                    player.clearActiveItem();
-
-
                     if (config.isMagazineSystemEnabled()) {
-                        String ammunitionType = WeaponUtils.getAvailableAmmunitionType(player, weapon);
-                        if (WeaponUtils.hasAmmunitionType(player, ammunitionType)) {
-                            boolean result = WeaponUtils.removeAmmunitionType(player, ammunitionType);
+                        String ammunitionType = AmmunitionUtils.getAvailableAmmunitionType(player, weapon);
+                        if (AmmunitionUtils.hasAmmunitionType(player, ammunitionType)) {
+                            boolean result = AmmunitionUtils.removeAmmunitionType(player, ammunitionType);
                             if (!result) {
                                 weaponEffects.showHotbar(player, "Reload cancelled");
+                                player.clearActiveItem();
                                 this.cancel();
                                 return;
                             }
                         } else {
                             weaponEffects.showHotbar(player, "Reload cancelled");
+                            player.clearActiveItem();
                             this.cancel();
                             return;
                         }
@@ -162,10 +174,11 @@ public class WeaponLogic {
 
                     }
                     weaponEffects.showHotbar(player, "Reloaded");
-                    weapon.setAmmunition(weapon.getMagazineSize());
-                    updateAmmunition(item, weapon);
 
-                    WeaponUtils.updateLore(item, weapon);
+                    weapon.setAmmunition(weapon.getMagazineSize());
+                    refreshWeapon(item, weapon);
+
+                    player.clearActiveItem();
                     this.cancel();
                     return;
                 }
@@ -179,12 +192,12 @@ public class WeaponLogic {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        CrystalWeapons.sendDebug("  called shoot ->");
+        CrystalWeapons.sendDebug("  called shoot -> (" + weapon.getAmmunition() + "/" + weapon.getMagazineSize() + ")");
 
         if (!weapon.isInfiniteAmmunition()) {
             weapon.setAmmunition(weapon.getAmmunition() - 1);
         }
-        weaponEffects.displayBullets(player, weapon, WeaponUtils.getAmmunitionAmount(player, weapon));
+        weaponEffects.displayBullets(player, weapon, AmmunitionUtils.getAmmunitionAmount(player, weapon));
 
 
 //        if (shouldBeRefreshed(player, item, weapon, config)) {
@@ -194,7 +207,19 @@ public class WeaponLogic {
 
         // Firing animation.
         if (config.weapons.visual.enableFireAnimation) {
+            long wait;
+            if (weapon.getShotDelay() > 1) {
+                wait = 3L;
+            } else {
+                wait = 1;
+            }
+
+            if (shouldBeRefreshed(player, item, weapon, config)) {
+                WeaponUtils.setModel(item, Weapon.WeaponModel.DEFAULT, weapon);
+            }
+
             new BukkitRunnable() {
+
                 @Override
                 public void run() {
                     // Fixes the firing animation.
@@ -202,18 +227,16 @@ public class WeaponLogic {
                         this.cancel();
                         return;
                     } else {
-                        updateAmmunition(item, weapon);
-                        WeaponUtils.updateLore(item, weapon);
+                        refreshWeapon(item, weapon);
                     }
 
                     WeaponUtils.setModel(item, Weapon.WeaponModel.IDLE, weapon);
 
 
                 }
-            }.runTaskLater(plugin, 3L);
+            }.runTaskLater(plugin, wait);
         } else {
-            updateAmmunition(item, weapon);
-            WeaponUtils.updateLore(item, weapon);
+            refreshWeapon(item, weapon);
         }
 
 
@@ -514,7 +537,6 @@ public class WeaponLogic {
     }
 
     private void updateAmmunition(ItemStack item, Weapon weapon) {
-        CrystalWeapons.sendDebug("      called updateAmmunition");
 
         if (item.getType() == Material.AIR) return;
         int ammunition = weapon.getAmmunition();
@@ -535,8 +557,13 @@ public class WeaponLogic {
     }
 
     private boolean shouldBeRefreshed(Player player, ItemStack item, Weapon weapon, Config.Data config) {
-        boolean r = !(item.equals(player.getActiveItem()) && weapon.getShotDelay() <= config.weapons.visual.fireAnimationFix && weapon.isAutomatic() && weapon.getAmmunition() > 0);
-        return r;
+        return !(item.equals(player.getActiveItem()) && weapon.getShotDelay() <= config.weapons.visual.fireAnimationFix && weapon.isAutomatic() && weapon.getAmmunition() > 0);
+    }
+
+    private void refreshWeapon(ItemStack item, Weapon weapon) {
+        CrystalWeapons.sendDebug("      called refresh");
+        updateAmmunition(item, weapon);
+        WeaponUtils.updateLore(item, weapon);
     }
 
     public record HitResult(Location location, BlockFace blockFace) {}
