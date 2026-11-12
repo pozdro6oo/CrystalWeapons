@@ -126,18 +126,22 @@ public final class CrystalWeapons extends JavaPlugin {
 
 
 
-    public static void sendDebug(String message) {
+    public static void sendDebug(Component message) {
 //        if (true) return;
 
         NamedTextColor color = NamedTextColor.WHITE;
 
-        Component text = Component.text(" " + message).color(color);
+        Component text = Component.text(" ").append(message).color(color);
 
         Component date = Component.text("["+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss:SS"))+"]").color(NamedTextColor.GRAY);
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(date.append(text));
         }
         Bukkit.getConsoleSender().sendMessage(text);
+    }
+
+    public static void sendDebug(String message) {
+        sendDebug(Component.text(message));
     }
 
 
@@ -209,6 +213,7 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("taser", false);
             setupDefaultWeapon("mag7");
             setupDefaultWeapon("glock18");
+            setupDefaultWeapon("negev");
 
             setupDefaultWeapon("m4a4");
             setupDefaultWeapon("m4a1-s");
@@ -228,6 +233,12 @@ public final class CrystalWeapons extends JavaPlugin {
 
             this.saveResource("tutorial.txt", false);
             this.saveResource("assets/textures/bullet_hit.png", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_1.ogg", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_2.ogg", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_3.ogg", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_4.ogg", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_5.ogg", false);
+            this.saveResource("assets/sounds/shot.bullet.passby_6.ogg", false);
 
             sendInfo("Created default files");
 

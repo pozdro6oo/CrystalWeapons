@@ -2,13 +2,9 @@ package eu.crystalmc.weapons.utils;
 
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
-import de.tr7zw.nbtapi.iface.ReadableNBT;
-import de.tr7zw.nbtapi.iface.ReadableNBTList;
-import eu.crystalmc.weapons.AmmunitionTypesRegistry;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.config.Synchronizable;
 import eu.crystalmc.weapons.Weapon;
-import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
@@ -19,9 +15,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.UseCooldownComponent;
 
 import java.util.List;
 import java.util.UUID;
@@ -70,9 +66,6 @@ public class WeaponUtils {
         return NamespacedKey.fromString("crystalmc:weapon_idle/" + weapon.getId());
     }
 
-    public static NamespacedKey createCooldownGroup() {
-        return NamespacedKey.fromString("crystalmc:weapon/"+ UUID.randomUUID().toString().replaceAll("-", ""));
-    }
 
     public static ReadWriteNBT getNBT(ReadWriteNBT nbt) {
         return nbt.getCompound(CrystalWeapons.WEAPON_COMPOUND);
@@ -93,6 +86,7 @@ public class WeaponUtils {
 
 
     public static boolean isWeapon(ItemStack itemStack) {
+        if (itemStack.getType() == Material.AIR) return false;
         return NBT.get(itemStack, nbt -> (boolean) nbt.hasTag(CrystalWeapons.WEAPON_COMPOUND));
     }
 
@@ -104,6 +98,19 @@ public class WeaponUtils {
         return NBT.get(itemStack, nbt -> (boolean) nbt.hasTag(CrystalWeapons.AMMUNITION_COMPOUND) || nbt.hasTag(CrystalWeapons.WEAPON_COMPOUND));
     }
 
+
+
+
+
+    public static void setCooldownGroup(ItemStack itemStack) {
+        ItemMeta meta = itemStack.getItemMeta();
+        UseCooldownComponent component = meta.getUseCooldown();
+        component.setCooldownGroup(
+                NamespacedKey.fromString("crystalmc:weapon/"+ UUID.randomUUID().toString().replaceAll("-", ""))
+        );
+        meta.setUseCooldown(component);
+        itemStack.setItemMeta(meta);
+    }
 
 
 

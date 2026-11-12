@@ -131,7 +131,9 @@ public class Config {
             public static class Sound {
                 public Float maxPitch = 1.17F;
                 public Float minPitch = 0.93F;
-                public Float volume = 0.43F;
+
+                public Float maxVolume = 0.45F;
+                public Float minVolume = 0.35F;
             }
 
             @Configuration

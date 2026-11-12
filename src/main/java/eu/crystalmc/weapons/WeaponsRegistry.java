@@ -2,8 +2,6 @@ package eu.crystalmc.weapons;
 
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.UseCooldownComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,16 +22,9 @@ public class WeaponsRegistry {
 
         ItemStack item = items.get(id).clone();
 
-        ItemMeta meta = item.getItemMeta();
-        UseCooldownComponent component = meta.getUseCooldown();
-
-
-        component.setCooldownGroup(WeaponUtils.createCooldownGroup());
-
-
-        meta.setUseCooldown(component);
-        item.setItemMeta(meta);
+        WeaponUtils.setCooldownGroup(item);
 
         return item;
     }
+
 }

@@ -1,0 +1,27 @@
+{
+  "item": {
+    "display_name": "Negev",
+    "model": "weapon_idle/default",
+    "fire_model": "weapon_fire/default",
+    "item_model": "weapon_item/default"
+  },
+  "sounds": {
+    "shoot": "negev.shoot",
+    "reload": "negev.reload"
+  },
+  "visual": {
+    "bullet_tracer_block": "GRAY_STAINED_GLASS",
+    "spawn_bullet_hit_decal": true
+  },
+  "magazine_size": 150,
+  "reload_time": 114,
+  "shot_delay": 2,
+  "damage": 2.0,
+  "inaccuracy": 0.04,
+  "recoil": 1.12,
+  "automatic": true,
+  "max_distance": 61.0,
+  "bullets_per_shot": 1,
+  "infinite_ammunition": false,
+  "type": "rifle"
+}

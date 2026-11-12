@@ -20,7 +20,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
-import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -31,9 +30,7 @@ import org.joml.Vector3f;
 import org.bukkit.util.Transformation;
 import org.jspecify.annotations.NonNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WeaponLogic {
@@ -127,7 +124,7 @@ public class WeaponLogic {
 
         weaponEffects.setCooldown(player, item, weapon.getReloadTime() + 1);
 
-        Sound sound = weaponEffects.playSound(player, "crystalmc:weapon." + weapon.getReloadSound(), config.weapons.sound.volume,1.0F);
+        Map<Player, Sound> sound = weaponEffects.playReloadSound(player.getLocation(), weapon);
 
         weaponEffects.showHotbar(player, "Reloading...");
 
@@ -144,7 +141,11 @@ public class WeaponLogic {
                 if (!item.equals(player.getEquipment().getItem(equipmentSlot))) {
                     weaponEffects.showHotbar(player, "Reload cancelled");
                     weaponEffects.setCooldown(player, item, 0);
-                    player.stopSound(sound);
+
+                    for (Player player2 : sound.keySet()) {
+                        player2.stopSound(sound.get(player2));
+                    }
+
                     this.cancel();
                     return;
                 }
@@ -243,7 +244,7 @@ public class WeaponLogic {
 
         weaponEffects.setCooldown(player, item, weapon.getShotDelay());
 
-        weaponEffects.playShootSound(player, weapon, config);
+        weaponEffects.playShootSound(player.getLocation(), weapon);
 
         createBullet(player, weapon, item);
 
@@ -256,12 +257,16 @@ public class WeaponLogic {
     private void createBullet(Player player, Weapon weapon, ItemStack item) {
         Map<Damageable, Double> damageMap = new HashMap<>();
 
+        Set<Player> soundMap = new HashSet<>(Collections.emptySet());
+
 
 
         Location playerPov = player.getEyeLocation();
 
         for (int i = 0; i < weapon.getBulletsPerShot(); i++) {
             HitResult hit = getHitLocation(player, weapon, playerPov);
+
+            soundMap.addAll(hit.location.getNearbyPlayers(4.3));
 
 
             if (config.weapons.visual.enableBulletTracers) createBulletTracer(player, hit, weapon);
@@ -306,6 +311,12 @@ public class WeaponLogic {
             }
 
         }
+
+        soundMap.remove(player);
+        for (Player entry : soundMap) {
+            weaponEffects.playBulletPassbySound(entry);
+        }
+
     }
 
 

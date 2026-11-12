@@ -529,22 +529,12 @@ public class ResourcepackCreator {
 
         JsonObject json = new JsonObject();
 
-        JsonObject sound;
-        List<String> soundsList;
+        addSound(json, List.of("shot.bullet.passby_1", "shot.bullet.passby_2", "shot.bullet.passby_3", "shot.bullet.passby_4", "shot.bullet.passby_5", "shot.bullet.passby_6"), "shot.bullet.passby", gson);
 
         String soundName;
-
         for (File file : sounds) {
             soundName = file.getName().replaceFirst("[.][^.]+$", "");
-            sound = new JsonObject();
-            soundsList = List.of("crystalmc:" + soundName);
-
-
-
-            sound.add("sounds", gson.toJsonTree(soundsList));
-
-
-            json.add("weapon."+ soundName, sound);
+            addSound(json, soundName, "weapon."+ soundName, gson);
         }
 
 
@@ -555,6 +545,34 @@ public class ResourcepackCreator {
             plugin.sendError("Error while writing '" + output + "'.");
         }
     }
+
+
+
+    private void addSound(JsonObject sounds, String fileName, String inGameName, Gson gson) {
+        List<String> soundsList;
+        JsonObject sound = new JsonObject();
+        soundsList = List.of("crystalmc:" + fileName);
+
+
+        sound.add("sounds", gson.toJsonTree(soundsList));
+
+        sounds.add(inGameName, sound);
+    }
+
+    private void addSound(JsonObject sounds, List<String> fileNames, String inGameName, Gson gson) {
+        JsonObject sound = new JsonObject();
+
+        List<String> soundsList = fileNames.stream().map(it -> "crystalmc:" + it).toList();
+
+
+        sound.add("sounds", gson.toJsonTree(soundsList));
+
+        sounds.add(inGameName, sound);
+    }
+
+
+
+
 
     private void copySubAssets(String subFolder, String add) {
         Path crystalFolder = getCrystalmcFolder();

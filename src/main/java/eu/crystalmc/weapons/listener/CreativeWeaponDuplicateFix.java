@@ -3,50 +3,49 @@ package eu.crystalmc.weapons.listener;
 import eu.crystalmc.weapons.CrystalWeapons;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.UseCooldownComponent;
 
 public class CreativeWeaponDuplicateFix implements Listener {
+
     @EventHandler
     public void onCreative(InventoryCreativeEvent event) {
-        ItemStack item = event.getCursor();
 
-        CrystalWeapons.sendDebug(" --------------------------");
-        CrystalWeapons.sendDebug(event.getClick() + "");
-        CrystalWeapons.sendDebug(event.getAction() + "");
-        CrystalWeapons.sendDebug(event.getCursor().getType() + "");
+        ItemStack cursor = event.getCursor();
 
-        if (WeaponUtils.isWeapon(item)) {
+        if (event.getAction() != InventoryAction.PLACE_ALL) return;
+        if (cursor.getType() == Material.AIR) return;
 
-            ItemMeta meta = item.getItemMeta();
-            UseCooldownComponent component = meta.getUseCooldown();
+        ItemMeta meta = cursor.getItemMeta();
+        if (meta == null) return;
 
-
-            if (event.getAction() == InventoryAction.CLONE_STACK) {
-                CrystalWeapons.sendDebug("test1");
-
-                if (item.getType() != Material.AIR) {
-
-                    CrystalWeapons.sendDebug("test2");
-
-                    if (WeaponUtils.isWeapon(item)) {
-
-                        CrystalWeapons.sendDebug("test3");
+        if (!WeaponUtils.isWeapon(cursor)) return;
 
 
-                        component.setCooldownGroup(WeaponUtils.createCooldownGroup());
+        NamespacedKey group = meta.getUseCooldown().getCooldownGroup();
+        if (group == null) return;
 
+        for (ItemStack itemStack : event.getInventory().getContents()) {
 
-                        meta.setUseCooldown(component);
-                        item.setItemMeta(meta);
+            if (itemStack == null || itemStack.getType() == Material.AIR) continue;
 
-                    }
-                }
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            if (itemMeta == null) {
+                continue;
+            } else {
+                itemMeta.getUseCooldown();
+            }
+
+            NamespacedKey itemGroup = itemMeta.getUseCooldown().getCooldownGroup();
+
+            if (group.equals(itemGroup)) {
+                CrystalWeapons.sendDebug("updated");
+                WeaponUtils.setCooldownGroup(itemStack);
             }
         }
     }
