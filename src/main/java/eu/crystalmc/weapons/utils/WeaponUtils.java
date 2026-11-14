@@ -39,7 +39,6 @@ public class WeaponUtils {
 
 
     public static void setModel(ItemStack itemStack, Weapon.WeaponModel model, Weapon weapon) {
-        CrystalWeapons.sendDebug("      setModel("+ model + ")");
         ItemMeta meta = itemStack.getItemMeta();
 
         NamespacedKey key;

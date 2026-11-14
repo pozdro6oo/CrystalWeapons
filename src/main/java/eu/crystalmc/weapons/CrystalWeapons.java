@@ -214,6 +214,7 @@ public final class CrystalWeapons extends JavaPlugin {
             setupDefaultWeapon("mag7");
             setupDefaultWeapon("glock18");
             setupDefaultWeapon("negev");
+//            setupDefaultWeapon("awp");
 
             setupDefaultWeapon("m4a4");
             setupDefaultWeapon("m4a1-s");
@@ -233,12 +234,10 @@ public final class CrystalWeapons extends JavaPlugin {
 
             this.saveResource("tutorial.txt", false);
             this.saveResource("assets/textures/bullet_hit.png", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_1.ogg", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_2.ogg", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_3.ogg", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_4.ogg", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_5.ogg", false);
-            this.saveResource("assets/sounds/shot.bullet.passby_6.ogg", false);
+
+            for (int i = 1; i <= 6; i++) {
+                this.saveResource("assets/sounds/shot.bullet.passby_" + i + ".ogg", false);
+            }
 
             sendInfo("Created default files");
 

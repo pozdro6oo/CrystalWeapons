@@ -23,5 +23,6 @@
   "max_distance": 1.7,
   "bullets_per_shot": 1,
   "infinite_ammunition": true,
-  "type": "none"
+  "type": "none",
+  "max_hear_distance": 10
 }

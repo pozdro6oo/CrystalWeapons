@@ -92,9 +92,8 @@ public class BulletHitDecalsManager {
     private static boolean isBulletHitDecal(ItemDisplay entity) {
         NamespacedKey model = entity.getItemStack().getItemMeta().getItemModel();
         if (model == null) return false;
-        String model1 = model.toString();
-        String model2 = texture.getItemMeta().getItemModel().toString();
-        return model1.equals(model2);
+        String templateModel = texture.getItemMeta().getItemModel().toString();
+        return model.toString().equals(templateModel);
     }
 
 

@@ -4,11 +4,11 @@ import de.exlll.configlib.*;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import org.bukkit.Material;
 
-
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class Config {
 
@@ -19,6 +19,8 @@ public class Config {
     YamlConfigurationProperties properties = YamlConfigurationProperties.newBuilder().setNameFormatter(NameFormatters.LOWER_UNDERSCORE).build();
 
     public Config(Path file) {
+        this.data = YamlConfigurations.update(file, Data.class, properties);
+        data.weapons.gameplay.breakBlocks.blocks = data.weapons.gameplay.breakBlocks.blocks.stream().map(block -> block.toUpperCase().replaceAll(" ", "_") ).collect(Collectors.toSet());
         this.data = YamlConfigurations.update(file, Data.class, properties);
         this.data.config = this;
 
@@ -168,14 +170,20 @@ public class Config {
 
                 public AmmunitionSystem ammunitionSystem = new AmmunitionSystem();
 
+                @Comment({
+                        "This is an experimental feature. It might be completed or removed in the future.",
+                        "Please note that there is not hard-coded limit, so if you set this to some high number, the server might lag or crash."
+                })
                 public LimitDistanceForAllWeapons limitDistanceForAllWeapons = new LimitDistanceForAllWeapons();
+
+                @Comment({
+                        "This is an experimental feature. It might be completed or removed in the future.",
+                        "When enabled: when bullet hits block it will break.",
+                })
+                public BreakBlocks breakBlocks = new BreakBlocks();
 
                 @Configuration
                 public static class LimitDistanceForAllWeapons {
-                    @Comment({
-                            "When enabled: every weapon will use this distance limit (number of blocks).",
-                            "Please note that there is not hard-coded limit, so if you set this to some high number, the server might lag or crash."
-                    })
                     public Boolean enabled = false;
                     public double distance = 128;
                 }
@@ -184,6 +192,12 @@ public class Config {
                 public static class AmmunitionSystem {
                     public Boolean enabled = true;
                     public int maxStackSize = 16;
+                }
+
+                @Configuration
+                public static class BreakBlocks {
+                    public Boolean enabled = true;
+                    public Set<String> blocks = Collections.emptySet();
                 }
 
             }
@@ -263,6 +277,13 @@ public class Config {
         public ItemUseAnimation getShootAnimation() {
             return getEnum(ItemUseAnimation.class, weapons.visual.animation.shoot,
                     ItemUseAnimation.TOOT_HORN, value -> weapons.visual.animation.shoot = value);
+        }
+
+        public Set<String> getBreakableBlock() {
+            return weapons.gameplay.breakBlocks.blocks;
+        }
+        public Boolean isBlockCanBeBroken() {
+            return weapons.gameplay.breakBlocks.enabled;
         }
 
 

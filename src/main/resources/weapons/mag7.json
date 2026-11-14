@@ -23,5 +23,6 @@
   "max_distance": 26,
   "bullets_per_shot": 9,
   "infinite_ammunition": false,
-  "type": "shotgun"
+  "type": "shotgun",
+  "max_hear_distance": 70
 }

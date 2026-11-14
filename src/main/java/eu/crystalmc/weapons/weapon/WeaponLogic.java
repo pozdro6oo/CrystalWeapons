@@ -14,6 +14,7 @@ import eu.crystalmc.weapons.api.event.player.PlayerUseWeaponEvent;
 import eu.crystalmc.weapons.config.AmmunitionTypeConfig;
 import eu.crystalmc.weapons.config.Config;
 import eu.crystalmc.weapons.utils.AmmunitionUtils;
+import eu.crystalmc.weapons.utils.LocationUtils;
 import eu.crystalmc.weapons.utils.WeaponUtils;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.*;
@@ -50,7 +51,6 @@ public class WeaponLogic {
         e.callEvent();
         if (e.isCancelled()) return;
 
-        CrystalWeapons.sendDebug("called use ->");
 
         if (config.weapons.visual.enableFireAnimation && weapon.getAmmunition() > 0) {
             WeaponUtils.setModel(item, Weapon.WeaponModel.DEFAULT, weapon);
@@ -107,7 +107,6 @@ public class WeaponLogic {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        CrystalWeapons.sendDebug("  called reload ->");
 
 
 
@@ -193,7 +192,6 @@ public class WeaponLogic {
         event.callEvent();
         if (event.isCancelled()) return;
 
-        CrystalWeapons.sendDebug("  called shoot -> (" + weapon.getAmmunition() + "/" + weapon.getMagazineSize() + ")");
 
         if (!weapon.isInfiniteAmmunition()) {
             weapon.setAmmunition(weapon.getAmmunition() - 1);
@@ -257,16 +255,20 @@ public class WeaponLogic {
     private void createBullet(Player player, Weapon weapon, ItemStack item) {
         Map<Damageable, Double> damageMap = new HashMap<>();
 
-        Set<Player> soundMap = new HashSet<>(Collections.emptySet());
-
-
+        Set<String> blocks = config.getBreakableBlock();
 
         Location playerPov = player.getEyeLocation();
 
-        for (int i = 0; i < weapon.getBulletsPerShot(); i++) {
-            HitResult hit = getHitLocation(player, weapon, playerPov);
+        HitResult hit;
+        Vector direction;
+        double distance;
+        Damageable entity;
+        RayTraceResult result;
+        Block block;
 
-            soundMap.addAll(hit.location.getNearbyPlayers(4.3));
+        for (int i = 0; i < weapon.getBulletsPerShot(); i++) {
+            hit = getHitLocation(player, weapon, playerPov);
+
 
 
             if (config.weapons.visual.enableBulletTracers) createBulletTracer(player, hit, weapon);
@@ -274,37 +276,60 @@ public class WeaponLogic {
             if (config.weapons.visual.bulletHitDecal.enable && weapon.isSpawnBulletHitDecal()) {
                 createBulletHitDecal(hit); }
 
-            Vector direction = hit.location().toVector().subtract(playerPov.toVector());
+            direction = hit.location().toVector().subtract(playerPov.toVector());
 
-            double distance = playerPov.distance(hit.location);
+            distance = playerPov.distance(hit.location);
 
-            RayTraceResult result = player.getWorld().rayTraceEntities(
+            result = player.getWorld().rayTraceEntities(
                     playerPov,
                     direction,
                     distance,
                     config.weapons.gameplay.bulletHitboxSize,
-                    entity -> entity != player && entity instanceof Damageable
+                    e -> e != player && e instanceof Damageable
 
             );
 
 
             if (result != null) {
-                Damageable entity = (Damageable) result.getHitEntity();
+                entity = (Damageable) result.getHitEntity();
 
                 damageMap.put(entity, damageMap.getOrDefault(entity, 0.0) + weapon.getDamage());
             }
+
+            block = hit.location.getBlock();
+            if (config.isBlockCanBeBroken()) {
+                if (blocks.contains(block.getType().toString())) {
+
+                    block.setType(Material.AIR);
+
+                    player.getWorld().playSound(
+                            hit.location,
+                            block.getBlockSoundGroup().getBreakSound(),
+                            1.0f,
+                            1.0f
+                    );
+                }
+            }
+
+            weaponEffects.playBulletPassbySound(hit.location, player);
         }
         // ----------------------------------------------------------------------------------------------------------
 
-        for (Map.Entry<Damageable, Double> entry : damageMap.entrySet()) {
-            org.bukkit.entity.Damageable entity = entry.getKey();
-            Double damage = entry.getValue();
+        double damage;
+        Vector velocity;
+        EntityHitByWeaponEvent event;
 
-            EntityHitByWeaponEvent event = new EntityHitByWeaponEvent(entity, weapon, item, player, damage);
+        for (Map.Entry<Damageable, Double> entry : damageMap.entrySet()) {
+            entity = entry.getKey();
+            damage = entry.getValue();
+
+            event = new EntityHitByWeaponEvent(entity, weapon, item, player, damage);
             event.callEvent();
             if (event.isCancelled()) return;
 
+            velocity = player.getVelocity();
             entity.damage(event.getDamage(), player);
+            entity.setVelocity(velocity);
 
             if (entity instanceof LivingEntity) {
                 ((LivingEntity) entity).setNoDamageTicks(0);
@@ -312,16 +337,12 @@ public class WeaponLogic {
 
         }
 
-        soundMap.remove(player);
-        for (Player entry : soundMap) {
-            weaponEffects.playBulletPassbySound(entry);
-        }
-
     }
 
 
     private HitResult getHitLocation(Player player, Weapon weapon, Location playerPov) {
         double distance = getMaxDistance(weapon);
+
 
 
         boolean isStandingStill = player.getVelocity().getX() == 0.0
@@ -437,20 +458,11 @@ public class WeaponLogic {
         if (blockFace == null) return;
 
         Location hitLocation = hit.location();
-        AxisAngle4f rotation = getAxisAngle4f(blockFace);
-
-        Block hitBlock = hitLocation.getBlock();
+        AxisAngle4f rotation = LocationUtils.getAxisAngle4f(blockFace);
 
         // check for negative coordinates (closest block).
-        if (!hitLocation.getBlock().getType().isSolid()) {
-            Location check = hitLocation.clone();
-            check.subtract(0.1, 0.1, 0.1);
-            if (!check.getBlock().getType().isSolid()) {
-                return;
-            } else {
-                hitBlock = check.getBlock();
-            }
-        }
+        Block hitBlock = LocationUtils.getSolidBlock(hitLocation);
+        if (hitBlock == null) { return; }
 
 
         Vector direction = blockFace.getDirection().normalize();
@@ -488,13 +500,6 @@ public class WeaponLogic {
 
 
 
-
-
-
-
-
-
-
     private double getMaxDistance(Weapon weapon) {
         Config.Data.Weapons.Gameplay.LimitDistanceForAllWeapons limit = config.getDistanceLimit();
 
@@ -503,24 +508,6 @@ public class WeaponLogic {
         } else {
             return weapon.getMaxDistance();
         }
-    }
-
-    private static @NonNull AxisAngle4f getAxisAngle4f(BlockFace blockFace) {
-        AxisAngle4f rotation;
-        if (blockFace == BlockFace.UP) {
-            rotation = new AxisAngle4f((float) Math.toRadians(90.0), 1f, 0f, 0f);
-        } else if (blockFace == BlockFace.DOWN) {
-            rotation = new AxisAngle4f((float) Math.toRadians(-90.0), 1f, 0f, 0f);
-        } else if (blockFace == BlockFace.EAST) {
-            rotation = new AxisAngle4f((float) Math.toRadians(-90.0), 0f, 1f, 0f);
-        } else if (blockFace == BlockFace.WEST) {
-            rotation = new AxisAngle4f((float) Math.toRadians(90.0), 0f, 1f, 0f);
-        } else if (blockFace == BlockFace.SOUTH) {
-            rotation = new AxisAngle4f((float) Math.toRadians(180.0), 0f, 1f, 0f);
-        } else {
-            rotation = new AxisAngle4f();
-        }
-        return rotation;
     }
 
     private byte getRandomFactor() {
@@ -572,7 +559,6 @@ public class WeaponLogic {
     }
 
     private void refreshWeapon(ItemStack item, Weapon weapon) {
-        CrystalWeapons.sendDebug("      called refresh");
         updateAmmunition(item, weapon);
         WeaponUtils.updateLore(item, weapon);
     }

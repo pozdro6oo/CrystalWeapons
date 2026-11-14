@@ -23,5 +23,6 @@
   "max_distance": 58,
   "bullets_per_shot": 1,
   "infinite_ammunition": false,
-  "type": "rifle"
+  "type": "rifle",
+  "max_hear_distance": 70
 }

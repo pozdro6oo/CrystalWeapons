@@ -46,6 +46,9 @@ public class WeaponConfig {
     @SerializedName("type")
     private String type = "rifle";
 
+    @SerializedName("max_hear_distance")
+    private double maxHearDistance = 70.0;
+
     // for gson to work
     public WeaponConfig() {
     }
@@ -136,6 +139,9 @@ public class WeaponConfig {
         return type;
     }
 
+    public double getMaxHearDistance() {
+        return maxHearDistance;
+    }
 
 
     public static class Item {

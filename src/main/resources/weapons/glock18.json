@@ -23,5 +23,6 @@
   "max_distance": 38,
   "bullets_per_shot": 1,
   "infinite_ammunition": false,
-  "type": "pistol"
+  "type": "pistol",
+  "max_hear_distance": 57
 }
